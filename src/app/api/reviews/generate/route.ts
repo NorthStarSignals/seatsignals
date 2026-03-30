@@ -15,7 +15,7 @@ const sampleReviews = [
 ];
 
 export async function POST() {
-  const { userId } = await auth();
+  const { userId } = auth();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const supabase = createServerSupabase();

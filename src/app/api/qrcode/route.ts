@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import QRCode from 'qrcode';
 
 export async function GET() {
-  const { userId } = await auth();
+  const { userId } = auth();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const supabase = createServerSupabase();

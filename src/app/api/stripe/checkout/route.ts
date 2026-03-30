@@ -4,7 +4,7 @@ import { stripe, PLANS } from '@/lib/stripe';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
+  const { userId } = auth();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { plan } = await request.json();
