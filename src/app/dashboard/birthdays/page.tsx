@@ -80,14 +80,24 @@ export default function BirthdaysPage() {
     }
   };
 
+  const [checking, setChecking] = useState(false);
+
   const triggerCron = async () => {
-    const res = await fetch('/api/birthdays/cron', { method: 'POST' });
-    if (res.ok) {
-      const data = await res.json();
-      toast.success(`Processed ${data.processed} birthday/anniversary events`);
-      fetchData();
-    } else {
+    setChecking(true);
+    try {
+      const res = await fetch('/api/birthdays/cron', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Processed ${data.processed} birthday/anniversary events`);
+        fetchData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error === 'No restaurant' ? 'Complete onboarding first — set up your restaurant profile in Settings.' : 'Failed to run birthday check');
+      }
+    } catch {
       toast.error('Failed to run birthday check');
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -95,8 +105,8 @@ export default function BirthdaysPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Birthdays & Anniversaries</h1>
-        <Button variant="secondary" size="sm" onClick={triggerCron}>
-          Run Birthday Check
+        <Button variant="secondary" size="sm" onClick={triggerCron} disabled={checking}>
+          {checking ? 'Checking...' : 'Run Birthday Check'}
         </Button>
       </div>
 

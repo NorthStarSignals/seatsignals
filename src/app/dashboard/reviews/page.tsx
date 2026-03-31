@@ -38,14 +38,28 @@ export default function ReviewsPage() {
 
   useEffect(() => { fetchReviews(); }, []);
 
+  const [generating, setGenerating] = useState(false);
+
   const generateTestReviews = async () => {
-    const res = await fetch('/api/reviews/generate', { method: 'POST' });
-    if (res.ok) {
-      const data = await res.json();
-      toast.success(`Generated ${data.count} test reviews with AI responses`);
-      fetchReviews();
-    } else {
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/reviews/generate', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Generated ${data.count} test reviews with AI responses`);
+        fetchReviews();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (data.error === 'No restaurant') {
+          toast.error('Complete onboarding first — set up your restaurant profile in Settings.');
+        } else {
+          toast.error('Failed to generate reviews');
+        }
+      }
+    } catch {
       toast.error('Failed to generate reviews');
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -76,8 +90,8 @@ export default function ReviewsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Reviews</h1>
-        <Button variant="secondary" size="sm" onClick={generateTestReviews}>
-          Generate Test Reviews
+        <Button variant="secondary" size="sm" onClick={generateTestReviews} disabled={generating}>
+          {generating ? 'Generating...' : 'Generate Test Reviews'}
         </Button>
       </div>
 

@@ -49,12 +49,24 @@ export default function CateringPage() {
 
   useEffect(() => { fetchData(); }, []);
 
+  const [discovering, setDiscovering] = useState(false);
+
   const discover = async () => {
-    const res = await fetch('/api/catering/discover', { method: 'POST' });
-    if (res.ok) {
-      const data = await res.json();
-      toast.success(`Discovered ${data.discovered} nearby businesses`);
-      fetchData();
+    setDiscovering(true);
+    try {
+      const res = await fetch('/api/catering/discover', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Discovered ${data.discovered} nearby businesses`);
+        fetchData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error === 'No restaurant' ? 'Complete onboarding first — set up your restaurant profile in Settings.' : 'Failed to discover leads');
+      }
+    } catch {
+      toast.error('Failed to discover leads');
+    } finally {
+      setDiscovering(false);
     }
   };
 
@@ -99,8 +111,8 @@ export default function CateringPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Catering Pipeline</h1>
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={discover}>
-            <Search size={16} className="mr-1" /> Discover
+          <Button variant="secondary" size="sm" onClick={discover} disabled={discovering}>
+            <Search size={16} className="mr-1" /> {discovering ? 'Discovering...' : 'Discover'}
           </Button>
           <Button variant="cta" size="sm" onClick={startSequence} disabled={selected.size === 0}>
             <Send size={16} className="mr-1" /> Start Sequence ({selected.size})

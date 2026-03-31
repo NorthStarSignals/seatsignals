@@ -45,12 +45,24 @@ export default function DeadHoursPage() {
 
   useEffect(() => { fetchData(); }, []);
 
+  const [triggering, setTriggering] = useState(false);
+
   const triggerNow = async () => {
-    const res = await fetch('/api/dead-hours/trigger', { method: 'POST' });
-    if (res.ok) {
-      const data = await res.json();
-      toast.success(`Sent ${data.sent} dead hours promotions`);
-      fetchData();
+    setTriggering(true);
+    try {
+      const res = await fetch('/api/dead-hours/trigger', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Sent ${data.sent} dead hours promotions`);
+        fetchData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error === 'No restaurant' ? 'Complete onboarding first — set up your restaurant profile in Settings.' : 'Failed to trigger promotions');
+      }
+    } catch {
+      toast.error('Failed to trigger promotions');
+    } finally {
+      setTriggering(false);
     }
   };
 
@@ -76,8 +88,8 @@ export default function DeadHoursPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Dead Hours Engine</h1>
-        <Button variant="secondary" size="sm" onClick={triggerNow}>
-          Trigger Now
+        <Button variant="secondary" size="sm" onClick={triggerNow} disabled={triggering}>
+          {triggering ? 'Triggering...' : 'Trigger Now'}
         </Button>
       </div>
 
