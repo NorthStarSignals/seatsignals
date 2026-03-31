@@ -1,3 +1,5 @@
+'use client';
+
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Toaster } from 'react-hot-toast';
 
