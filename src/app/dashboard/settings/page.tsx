@@ -1,11 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRestaurant } from '@/hooks/use-restaurant';
 import { PLANS } from '@/lib/stripe';
 import toast from 'react-hot-toast';
 import { Download, QrCode, CreditCard, Zap, Pencil } from 'lucide-react';
+
+interface IntegrationConfig {
+  id: string;
+  provider: string;
+  status: string;
+  config: Record<string, string>;
+}
+
+const INTEGRATIONS = [
+  { name: 'Google Business Profile', provider: 'google_business', desc: 'Auto-monitor and respond to reviews' },
+];
 
 export default function SettingsPage() {
   const { restaurant, loading, mutate } = useRestaurant();
@@ -15,6 +26,62 @@ export default function SettingsPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: '', address: '', cuisine_type: '', brand_voice: '' });
+  const [connectedIntegrations, setConnectedIntegrations] = useState<IntegrationConfig[]>([]);
+  const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState('');
+  const [savingIntegration, setSavingIntegration] = useState(false);
+
+  const fetchIntegrations = useCallback(async () => {
+    try {
+      const res = await fetch('/api/integrations');
+      if (res.ok) {
+        const data = await res.json();
+        setConnectedIntegrations(data.integrations || []);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => { fetchIntegrations(); }, [fetchIntegrations]);
+
+  const isConnected = (provider: string) =>
+    connectedIntegrations.some(i => i.provider === provider && i.status === 'connected');
+
+  const handleConnect = async (provider: string) => {
+    if (!apiKey.trim()) { toast.error('Please enter an API key'); return; }
+    setSavingIntegration(true);
+    try {
+      const res = await fetch('/api/integrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, api_key: apiKey }),
+      });
+      if (res.ok) {
+        toast.success('Integration connected');
+        setConnectingProvider(null);
+        setApiKey('');
+        fetchIntegrations();
+      } else {
+        toast.error('Failed to connect integration');
+      }
+    } catch { toast.error('Failed to connect integration'); }
+    finally { setSavingIntegration(false); }
+  };
+
+  const handleDisconnect = async (provider: string) => {
+    try {
+      const res = await fetch('/api/integrations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider }),
+      });
+      if (res.ok) {
+        toast.success('Integration disconnected');
+        fetchIntegrations();
+      } else {
+        toast.error('Failed to disconnect');
+      }
+    } catch { toast.error('Failed to disconnect'); }
+  };
 
   useEffect(() => {
     if (restaurant) {
@@ -221,13 +288,47 @@ export default function SettingsPage() {
             <h2 className="text-lg font-semibold text-white">Integrations</h2>
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-navy-700 rounded-lg">
-              <div>
-                <p className="text-white font-medium">Google Business Profile</p>
-                <p className="text-xs text-slate-400">Auto-monitor and respond to reviews</p>
-              </div>
-              <Button variant="secondary" size="sm" onClick={() => toast.success('Integration coming soon! We\'ll notify you when Google Business Profile is available.')}>Connect</Button>
-            </div>
+            {INTEGRATIONS.map((integration) => {
+              const connected = isConnected(integration.provider);
+              const isExpanded = connectingProvider === integration.provider;
+              return (
+                <div key={integration.provider} className="p-4 bg-navy-700 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="text-white font-medium">{integration.name}</p>
+                        <p className="text-xs text-slate-400">{integration.desc}</p>
+                      </div>
+                      {connected && (
+                        <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full">Connected</span>
+                      )}
+                    </div>
+                    {connected ? (
+                      <Button variant="secondary" size="sm" onClick={() => handleDisconnect(integration.provider)}>Disconnect</Button>
+                    ) : (
+                      <Button variant="secondary" size="sm" onClick={() => { setConnectingProvider(isExpanded ? null : integration.provider); setApiKey(''); }}>
+                        {isExpanded ? 'Cancel' : 'Connect'}
+                      </Button>
+                    )}
+                  </div>
+                  {isExpanded && !connected && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <input
+                        type="password"
+                        placeholder="Enter your API key"
+                        value={apiKey}
+                        onChange={e => setApiKey(e.target.value)}
+                        className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full"
+                      />
+                      <Button variant="cta" size="sm" onClick={() => handleConnect(integration.provider)} disabled={savingIntegration}>
+                        {savingIntegration ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => { setConnectingProvider(null); setApiKey(''); }}>Cancel</Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <div className="flex items-center justify-between p-4 bg-navy-700 rounded-lg">
               <div>
                 <p className="text-white font-medium">Test Mode</p>
