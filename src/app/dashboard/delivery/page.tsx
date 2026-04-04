@@ -156,7 +156,7 @@ export default function DeliveryPage() {
   const categories = Array.from(new Set(checklist.map(i => i.category)));
 
   if (loadingIntegrations) {
-    return <div className="text-slate-400">Loading delivery data...</div>;
+    return <div className="text-zinc-400">Loading delivery data...</div>;
   }
 
   const hasConnected = connectedPlatforms.length > 0;
@@ -180,12 +180,12 @@ export default function DeliveryPage() {
 
       {/* No platforms connected — CTA */}
       {!hasConnected && (
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-8 text-center mb-6">
-          <div className="w-16 h-16 rounded-full bg-navy-700 flex items-center justify-center mx-auto mb-4">
-            <Truck size={28} className="text-slate-500" />
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center mb-6">
+          <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-4">
+            <Truck size={28} className="text-zinc-500" />
           </div>
           <h2 className="text-xl font-semibold text-white mb-2">Connect Your Delivery Platforms</h2>
-          <p className="text-slate-400 text-sm max-w-md mx-auto mb-6">
+          <p className="text-zinc-400 text-sm max-w-md mx-auto mb-6">
             Connect DoorDash, Uber Eats, Grubhub, and more to automatically track orders, revenue, and ratings across all your delivery channels in one place.
           </p>
           <Link href="/dashboard/settings">
@@ -193,7 +193,7 @@ export default function DeliveryPage() {
               <Settings size={18} className="mr-2" /> Go to Settings to Connect
             </Button>
           </Link>
-          <p className="text-xs text-slate-500 mt-4">
+          <p className="text-xs text-zinc-500 mt-4">
             Supports DoorDash, Uber Eats, Grubhub, Postmates, Caviar, ChowNow, Toast Takeout, and Olo
           </p>
         </div>
@@ -230,48 +230,48 @@ export default function DeliveryPage() {
           </div>
 
           {/* Per-Platform Breakdown */}
-          <div className="bg-navy-800 border border-navy-700 rounded-xl p-6 mb-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
             <h2 className="text-lg font-semibold text-white mb-4">Platform Breakdown</h2>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-navy-700">
-                    <th className="text-left text-xs text-slate-500 uppercase tracking-wider pb-3 pr-4">Platform</th>
-                    <th className="text-right text-xs text-slate-500 uppercase tracking-wider pb-3 px-4">Orders</th>
-                    <th className="text-right text-xs text-slate-500 uppercase tracking-wider pb-3 px-4">Revenue</th>
-                    <th className="text-right text-xs text-slate-500 uppercase tracking-wider pb-3 px-4">AOV</th>
-                    <th className="text-right text-xs text-slate-500 uppercase tracking-wider pb-3 px-4">Rating</th>
-                    <th className="text-right text-xs text-slate-500 uppercase tracking-wider pb-3 pl-4">Actions</th>
+                  <tr className="border-b border-zinc-800">
+                    <th className="text-left text-xs text-zinc-500 uppercase tracking-wider pb-3 pr-4">Platform</th>
+                    <th className="text-right text-xs text-zinc-500 uppercase tracking-wider pb-3 px-4">Orders</th>
+                    <th className="text-right text-xs text-zinc-500 uppercase tracking-wider pb-3 px-4">Revenue</th>
+                    <th className="text-right text-xs text-zinc-500 uppercase tracking-wider pb-3 px-4">AOV</th>
+                    <th className="text-right text-xs text-zinc-500 uppercase tracking-wider pb-3 px-4">Rating</th>
+                    <th className="text-right text-xs text-zinc-500 uppercase tracking-wider pb-3 pl-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {platformMetrics.map((pm) => (
-                    <tr key={pm.provider} className="border-b border-navy-700/50 last:border-0">
+                    <tr key={pm.provider} className="border-b border-zinc-800/50 last:border-0">
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-emerald-400 rounded-full" />
                           <span className="text-white text-sm font-medium">{pm.name}</span>
                         </div>
                       </td>
-                      <td className="text-right text-sm text-slate-300 py-3 px-4">
+                      <td className="text-right text-sm text-zinc-300 py-3 px-4">
                         <div className="flex items-center justify-end gap-1.5">
-                          <ShoppingBag size={13} className="text-slate-500" />
+                          <ShoppingBag size={13} className="text-zinc-500" />
                           {pm.orders.toLocaleString()}
                         </div>
                       </td>
-                      <td className="text-right text-sm text-slate-300 py-3 px-4">
+                      <td className="text-right text-sm text-zinc-300 py-3 px-4">
                         <div className="flex items-center justify-end gap-1.5">
-                          <DollarSign size={13} className="text-slate-500" />
+                          <DollarSign size={13} className="text-zinc-500" />
                           ${pm.revenue.toLocaleString()}
                         </div>
                       </td>
-                      <td className="text-right text-sm text-slate-300 py-3 px-4">
+                      <td className="text-right text-sm text-zinc-300 py-3 px-4">
                         <div className="flex items-center justify-end gap-1.5">
-                          <TrendingUp size={13} className="text-slate-500" />
+                          <TrendingUp size={13} className="text-zinc-500" />
                           ${pm.avg_order_value}
                         </div>
                       </td>
-                      <td className="text-right text-sm text-slate-300 py-3 px-4">
+                      <td className="text-right text-sm text-zinc-300 py-3 px-4">
                         <div className="flex items-center justify-end gap-1.5">
                           <Star size={13} className="text-amber-400" />
                           {pm.rating}
@@ -292,7 +292,7 @@ export default function DeliveryPage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-[11px] text-slate-600 mt-3">
+            <p className="text-[11px] text-zinc-600 mt-3">
               Demo data shown — live sync will populate real metrics from each platform&apos;s API.
             </p>
           </div>
@@ -307,31 +307,31 @@ export default function DeliveryPage() {
       </div>
 
       {/* Audit Checklist */}
-      <div className="bg-navy-800 border border-navy-700 rounded-xl p-6 mb-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-white mb-4">Optimization Checklist</h2>
         {categories.map(cat => (
           <div key={cat} className="mb-4">
-            <h3 className="text-sm font-medium text-slate-400 mb-2 uppercase tracking-wider">{cat}</h3>
+            <h3 className="text-sm font-medium text-zinc-400 mb-2 uppercase tracking-wider">{cat}</h3>
             {checklist.filter(i => i.category === cat).map(item => (
               <button
                 key={item.id}
                 onClick={() => toggleStatus(item.id)}
-                className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-navy-700 transition-colors text-left"
+                className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-zinc-800 transition-colors text-left"
               >
                 {item.status === 'done' ? (
                   <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />
                 ) : item.status === 'na' ? (
-                  <Minus size={18} className="text-slate-600 flex-shrink-0" />
+                  <Minus size={18} className="text-zinc-600 flex-shrink-0" />
                 ) : (
-                  <Circle size={18} className="text-slate-500 flex-shrink-0" />
+                  <Circle size={18} className="text-zinc-500 flex-shrink-0" />
                 )}
-                <span className={`text-sm ${item.status === 'done' ? 'text-slate-400 line-through' : item.status === 'na' ? 'text-slate-600' : 'text-white'}`}>
+                <span className={`text-sm ${item.status === 'done' ? 'text-zinc-400 line-through' : item.status === 'na' ? 'text-zinc-600' : 'text-white'}`}>
                   {item.text}
                 </span>
                 <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
                   item.impact === 'high' ? 'bg-red-500/10 text-red-400' :
                   item.impact === 'medium' ? 'bg-amber-500/10 text-amber-400' :
-                  'bg-slate-500/10 text-slate-400'
+                  'bg-slate-500/10 text-zinc-400'
                 }`}>
                   {item.impact}
                 </span>
@@ -343,16 +343,16 @@ export default function DeliveryPage() {
 
       {/* Recommendations */}
       {recommendations.length > 0 && (
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Prioritized Recommendations</h2>
           {recommendations.slice(0, 5).map(r => (
-            <div key={r.id} className="flex items-center gap-3 p-3 border-b border-navy-700 last:border-0">
+            <div key={r.id} className="flex items-center gap-3 p-3 border-b border-zinc-800 last:border-0">
               <span className={`text-xs px-2 py-0.5 rounded-full ${
                 r.impact === 'high' ? 'bg-red-500/10 text-red-400' :
                 r.impact === 'medium' ? 'bg-amber-500/10 text-amber-400' :
-                'bg-slate-500/10 text-slate-400'
+                'bg-slate-500/10 text-zinc-400'
               }`}>{r.impact.toUpperCase()}</span>
-              <span className="text-sm text-slate-300">{r.text}</span>
+              <span className="text-sm text-zinc-300">{r.text}</span>
             </div>
           ))}
         </div>

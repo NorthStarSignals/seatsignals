@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Users, MessageSquare, Target, Building2, Clock, Cake } from 'lucide-react';
+import { Users, MessageSquare, Target, Building2, Clock, Cake, DollarSign, Mail, Smartphone, Zap } from 'lucide-react';
 
 interface OverviewData {
   metrics: {
@@ -22,6 +22,17 @@ interface OverviewData {
     dead_hours: number;
     birthdays: number;
     delivery_uplift: number;
+  };
+  integrations?: {
+    connected_count: number;
+    connected_providers: string[];
+    delivery_count: number;
+    pos_connected: boolean;
+    pos_daily_revenue: number;
+    crm_connected: boolean;
+    email_subscribers: number;
+    sms_subscribers: number;
+    delivery_revenue: number;
   };
   activities: Array<{ text: string; time: string; type: string }>;
 }
@@ -68,6 +79,7 @@ export default function DashboardOverview() {
 
   const m = data?.metrics || { total_customers: 0, response_rate: 0, active_leads: 0, corp_accounts: 0, dead_hours_filled: 0, upcoming_birthdays: 0 };
   const r = data?.revenue || { total: 0, repeat_visits: 0, catering: 0, corporate_recurring: 0, dead_hours: 0, birthdays: 0, delivery_uplift: 0 };
+  const integrations = data?.integrations;
   const activities = data?.activities || [];
 
   const revenueBreakdown = [
@@ -88,6 +100,25 @@ export default function DashboardOverview() {
         <p className="text-sm text-zinc-500 mt-1">Your restaurant at a glance</p>
       </div>
 
+      {/* Connected Integrations Summary */}
+      {integrations && integrations.connected_count > 0 && (
+        <div className="bg-seat-card border border-seat-border rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap size={16} className="text-red-500" />
+            <h2 className="text-sm font-semibold text-white uppercase tracking-wider">Connected Integrations</h2>
+            <span className="text-xs text-zinc-500">{integrations.connected_count} active</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {integrations.connected_providers.map((name) => (
+              <span key={name} className="inline-flex items-center gap-1.5 bg-zinc-800 text-zinc-300 text-xs px-3 py-1.5 rounded-full">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                {name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
         <MetricCard title="Total Customers" value={m.total_customers} icon={<Users size={16} />} />
@@ -97,6 +128,24 @@ export default function DashboardOverview() {
         <MetricCard title="Dead Hours Filled" value={m.dead_hours_filled} subtitle="This month" icon={<Clock size={16} />} />
         <MetricCard title="Upcoming Birthdays" value={m.upcoming_birthdays} subtitle="Next 30 days" icon={<Cake size={16} />} />
       </div>
+
+      {/* Integration Metrics Row */}
+      {integrations && (integrations.pos_connected || integrations.delivery_count > 0 || integrations.crm_connected) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {integrations.pos_connected && (
+            <MetricCard title="POS Daily Revenue" value={formatCurrency(integrations.pos_daily_revenue)} subtitle="From connected POS" icon={<DollarSign size={16} />} />
+          )}
+          {integrations.delivery_count > 0 && (
+            <MetricCard title="Delivery Revenue" value={formatCurrency(integrations.delivery_revenue)} subtitle={`${integrations.delivery_count} platform${integrations.delivery_count > 1 ? 's' : ''}`} icon={<DollarSign size={16} />} />
+          )}
+          {integrations.crm_connected && (
+            <MetricCard title="Email Subscribers" value={integrations.email_subscribers.toLocaleString()} subtitle="From connected CRM" icon={<Mail size={16} />} />
+          )}
+          {integrations.crm_connected && (
+            <MetricCard title="SMS Subscribers" value={integrations.sms_subscribers.toLocaleString()} subtitle="From connected CRM" icon={<Smartphone size={16} />} />
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Revenue Attribution */}

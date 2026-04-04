@@ -1,13 +1,37 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Toaster } from 'react-hot-toast';
+import { useRestaurant } from '@/hooks/use-restaurant';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { restaurant, loading } = useRestaurant();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !restaurant) {
+      router.replace('/onboarding');
+    }
+  }, [loading, restaurant, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-seat-black flex items-center justify-center">
+        <div className="text-zinc-400 text-sm">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!restaurant) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-seat-black">
       <Sidebar />

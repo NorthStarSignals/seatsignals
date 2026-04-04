@@ -10,7 +10,7 @@ export async function POST() {
   const supabase = createServerSupabase();
   const { data: restaurant } = await supabase
     .from('restaurants')
-    .select('restaurant_id, name, cuisine_type, brand_voice')
+    .select('restaurant_id, name, cuisine_type, brand_voice, address')
     .eq('clerk_user_id', userId)
     .single();
 
@@ -38,12 +38,12 @@ export async function POST() {
     supabase.from('customers').select('*', { count: 'exact', head: true }).eq('restaurant_id', rid).gte('first_seen', thirtyDaysAgo.toISOString()),
     supabase.from('reviews').select('rating, text, author, platform, created_at, response_status').eq('restaurant_id', rid).order('created_at', { ascending: false }).limit(50),
     supabase.from('catering_orders').select('amount, date, recurring, corporate_account_id').eq('restaurant_id', rid).gte('date', sixtyDaysAgo.toISOString()),
-    supabase.from('corporate_accounts').select('company_name, monthly_value, contact_name').eq('restaurant_id', rid),
-    supabase.from('dead_hours').select('revenue, seats_filled, triggered_at, time_slot').eq('restaurant_id', rid).gte('triggered_at', thirtyDaysAgo.toISOString()),
+    supabase.from('corporate_accounts').select('company_name, total_lifetime_value, primary_contact').eq('restaurant_id', rid),
+    supabase.from('dead_hours').select('revenue, seats_filled, triggered_at, time_start, time_end').eq('restaurant_id', rid).gte('triggered_at', thirtyDaysAgo.toISOString()),
     supabase.from('birthday_events').select('check_total, redeemed, offer_sent_at').eq('restaurant_id', rid).gte('offer_sent_at', sixtyDaysAgo.toISOString()),
     supabase.from('sequences').select('type, converted, sent_at, message').eq('restaurant_id', rid).gte('sent_at', thirtyDaysAgo.toISOString()),
     supabase.from('customers').select('visit_count, total_spend, last_seen, source').eq('restaurant_id', rid).order('total_spend', { ascending: false }).limit(100),
-    supabase.from('delivery_platforms').select('platform, commission_rate, monthly_orders, monthly_revenue').eq('restaurant_id', rid),
+    supabase.from('delivery_metrics').select('platform, orders, revenue, avg_order_value, rating').eq('restaurant_id', rid),
   ]);
 
   // Compute aggregates
@@ -54,7 +54,7 @@ export async function POST() {
     ? Math.round(reviews.filter(r => r.response_status === 'posted').length / reviews.length * 100) : 0;
 
   const cateringRevenue = (cateringOrders || []).reduce((s, o) => s + (o.amount || 0), 0);
-  const corpMonthly = (corpAccounts || []).reduce((s, a) => s + (a.monthly_value || 0), 0);
+  const corpMonthly = (corpAccounts || []).reduce((s, a) => s + (a.total_lifetime_value || 0), 0);
   const deadHoursRevenue = (deadHours || []).reduce((s, d) => s + (d.revenue || 0), 0);
   const birthdayRevenue = (birthdayEvents || []).filter(b => b.redeemed).reduce((s, b) => s + (b.check_total || 0), 0);
   const birthdayRedemptionRate = birthdayEvents && birthdayEvents.length > 0
@@ -72,9 +72,10 @@ export async function POST() {
 
   const deliverySummary = (deliveryData || []).map(d => ({
     platform: d.platform,
-    commissionRate: d.commission_rate,
-    orders: d.monthly_orders,
-    revenue: d.monthly_revenue,
+    orders: d.orders,
+    revenue: d.revenue,
+    avgOrderValue: d.avg_order_value,
+    rating: d.rating,
   }));
 
   const anthropic = new Anthropic();

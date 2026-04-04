@@ -33,7 +33,7 @@ interface IntegrationSection {
 const INTEGRATION_SECTIONS: IntegrationSection[] = [
   {
     title: 'Delivery Platforms',
-    icon: <Truck size={18} className="text-accent-blue" />,
+    icon: <Truck size={18} className="text-red-500" />,
     integrations: [
       { name: 'DoorDash', provider: 'doordash', desc: 'Sync orders, revenue, and ratings from DoorDash' },
       { name: 'Uber Eats', provider: 'uber_eats', desc: 'Sync orders, revenue, and ratings from Uber Eats' },
@@ -47,7 +47,7 @@ const INTEGRATION_SECTIONS: IntegrationSection[] = [
   },
   {
     title: 'POS Systems',
-    icon: <Monitor size={18} className="text-accent-blue" />,
+    icon: <Monitor size={18} className="text-red-500" />,
     integrations: [
       { name: 'Toast POS', provider: 'toast_pos', desc: 'Sync sales, menu items, and labor data' },
       { name: 'Square', provider: 'square', desc: 'Sync transactions, items, and customer data' },
@@ -59,7 +59,7 @@ const INTEGRATION_SECTIONS: IntegrationSection[] = [
   },
   {
     title: 'CRM & Marketing',
-    icon: <Mail size={18} className="text-accent-blue" />,
+    icon: <Mail size={18} className="text-red-500" />,
     integrations: [
       { name: 'Klaviyo', provider: 'klaviyo', desc: 'Sync customer data for email & SMS campaigns' },
       { name: 'HubSpot', provider: 'hubspot', desc: 'Sync contacts and deals to your CRM' },
@@ -68,7 +68,7 @@ const INTEGRATION_SECTIONS: IntegrationSection[] = [
   },
   {
     title: 'Reviews',
-    icon: <Star size={18} className="text-accent-blue" />,
+    icon: <Star size={18} className="text-red-500" />,
     integrations: [
       { name: 'Google Business Profile', provider: 'google_business', desc: 'Auto-monitor and respond to Google reviews' },
       { name: 'Yelp', provider: 'yelp', desc: 'Monitor and respond to Yelp reviews' },
@@ -77,7 +77,7 @@ const INTEGRATION_SECTIONS: IntegrationSection[] = [
   },
   {
     title: 'WiFi & Analytics',
-    icon: <Wifi size={18} className="text-accent-blue" />,
+    icon: <Wifi size={18} className="text-red-500" />,
     integrations: [
       { name: 'WiFi Analytics', provider: 'wifi_analytics', desc: 'Power your capture form — collect customer data via WiFi login' },
     ],
@@ -236,7 +236,7 @@ export default function SettingsPage() {
     toast.success('Copied to clipboard');
   };
 
-  if (loading) return <div className="text-slate-400">Loading settings...</div>;
+  if (loading) return <div className="text-zinc-400">Loading settings...</div>;
 
   const totalConnected = connectedIntegrations.filter(i => i.status === 'connected').length;
 
@@ -246,11 +246,11 @@ export default function SettingsPage() {
 
       <div className="space-y-6">
         {/* Restaurant Profile */}
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Restaurant Profile</h2>
             {restaurant && !editing && (
-              <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors">
                 <Pencil size={13} /> Edit Profile
               </button>
             )}
@@ -260,23 +260,23 @@ export default function SettingsPage() {
               <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="text-[10px] font-medium uppercase tracking-wider text-slate-600 mb-1 block">Name</label>
+                    <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-600 mb-1 block">Name</label>
                     <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-medium uppercase tracking-wider text-slate-600 mb-1 block">Address</label>
+                    <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-600 mb-1 block">Address</label>
                     <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-medium uppercase tracking-wider text-slate-600 mb-1 block">Cuisine</label>
+                    <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-600 mb-1 block">Cuisine</label>
                     <input value={form.cuisine_type} onChange={e => setForm({ ...form, cuisine_type: e.target.value })} className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-medium uppercase tracking-wider text-slate-600 mb-1 block">Subscription</label>
+                    <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-600 mb-1 block">Subscription</label>
                     <p className="text-white capitalize text-sm px-4 py-2.5">{restaurant.subscription_tier} Plan</p>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-[10px] font-medium uppercase tracking-wider text-slate-600 mb-1 block">Brand Voice</label>
+                    <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-600 mb-1 block">Brand Voice</label>
                     <input value={form.brand_voice} onChange={e => setForm({ ...form, brand_voice: e.target.value })} className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full" />
                   </div>
                 </div>
@@ -288,51 +288,51 @@ export default function SettingsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Name</p>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Name</p>
                   <p className="text-white">{restaurant.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Address</p>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Address</p>
                   <p className="text-white">{restaurant.address}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Cuisine</p>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Cuisine</p>
                   <p className="text-white">{restaurant.cuisine_type}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Subscription</p>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Subscription</p>
                   <p className="text-white capitalize">{restaurant.subscription_tier} Plan</p>
                 </div>
                 {restaurant.brand_voice && (
                   <div className="md:col-span-2">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider">Brand Voice</p>
-                    <p className="text-slate-300 text-sm">{restaurant.brand_voice}</p>
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider">Brand Voice</p>
+                    <p className="text-zinc-300 text-sm">{restaurant.brand_voice}</p>
                   </div>
                 )}
               </div>
             )
           ) : (
-            <p className="text-slate-400">Complete onboarding to set up your profile.</p>
+            <p className="text-zinc-400">Complete onboarding to set up your profile.</p>
           )}
         </div>
 
         {/* WiFi Capture Setup */}
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Wifi size={20} className="text-accent-blue" />
+            <Wifi size={20} className="text-red-500" />
             <h2 className="text-lg font-semibold text-white">WiFi Capture Setup</h2>
           </div>
           {restaurant ? (
             <div className="space-y-5">
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-zinc-300">
                 Share this link or print QR codes for table tents to capture customer data. When guests scan the QR code or visit the link, they&apos;ll see your branded WiFi capture page where they can opt in for offers.
               </p>
 
               {/* Capture URL */}
               <div>
-                <label className="text-[10px] font-medium uppercase tracking-wider text-slate-500 mb-2 block">Capture Form URL</label>
+                <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 mb-2 block">Capture Form URL</label>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-navy-700 border border-navy-600 rounded-lg px-4 py-2.5 text-sm text-slate-300 font-mono break-all">
+                  <div className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-zinc-300 font-mono break-all">
                     {captureUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/capture/${restaurant.restaurant_id}`}
                   </div>
                   <Button
@@ -357,14 +357,14 @@ export default function SettingsPage() {
                 {qrSvg ? (
                   <div className="bg-white p-4 rounded-lg" dangerouslySetInnerHTML={{ __html: qrSvg }} />
                 ) : (
-                  <div className="w-[150px] h-[150px] bg-navy-700 rounded-lg flex items-center justify-center">
-                    <QrCode size={40} className="text-slate-600" />
+                  <div className="w-[150px] h-[150px] bg-zinc-800 rounded-lg flex items-center justify-center">
+                    <QrCode size={40} className="text-zinc-600" />
                   </div>
                 )}
                 <div className="flex-1 space-y-3">
                   <div>
                     <p className="text-sm font-medium text-white mb-1">Table Tent Message</p>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-zinc-400">
                       &quot;Scan for free WiFi + 10% off your next visit.&quot;
                     </p>
                   </div>
@@ -394,14 +394,14 @@ export default function SettingsPage() {
               </div>
             </div>
           ) : (
-            <p className="text-slate-400 text-sm">Complete onboarding to set up WiFi capture.</p>
+            <p className="text-zinc-400 text-sm">Complete onboarding to set up WiFi capture.</p>
           )}
         </div>
 
         {/* Integrations */}
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <Zap size={20} className="text-accent-blue" />
+            <Zap size={20} className="text-red-500" />
             <h2 className="text-lg font-semibold text-white">Integrations</h2>
             {totalConnected > 0 && (
               <span className="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-0.5 rounded-full ml-2">
@@ -409,7 +409,7 @@ export default function SettingsPage() {
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-400 mb-5">Connect your platforms to automatically sync data into SeatSignals.</p>
+          <p className="text-sm text-zinc-400 mb-5">Connect your platforms to automatically sync data into SeatSignals.</p>
 
           <div className="space-y-6">
             {INTEGRATION_SECTIONS.map((section) => {
@@ -433,9 +433,9 @@ export default function SettingsPage() {
                       )}
                     </div>
                     {isCollapsed ? (
-                      <ChevronDown size={16} className="text-slate-500 group-hover:text-white transition-colors" />
+                      <ChevronDown size={16} className="text-zinc-500 group-hover:text-white transition-colors" />
                     ) : (
-                      <ChevronUp size={16} className="text-slate-500 group-hover:text-white transition-colors" />
+                      <ChevronUp size={16} className="text-zinc-500 group-hover:text-white transition-colors" />
                     )}
                   </button>
 
@@ -445,7 +445,7 @@ export default function SettingsPage() {
                         const connected = isConnected(integration.provider);
                         const isExpanded = connectingProvider === integration.provider;
                         return (
-                          <div key={integration.provider} className="p-4 bg-navy-700 rounded-lg">
+                          <div key={integration.provider} className="p-4 bg-zinc-800 rounded-lg">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2 min-w-0">
                                 <div className="min-w-0">
@@ -455,7 +455,7 @@ export default function SettingsPage() {
                                       <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full flex-shrink-0">Connected</span>
                                     )}
                                   </div>
-                                  <p className="text-xs text-slate-400 mt-0.5">{integration.desc}</p>
+                                  <p className="text-xs text-zinc-400 mt-0.5">{integration.desc}</p>
                                 </div>
                               </div>
                               <div className="flex-shrink-0 ml-4">
@@ -493,14 +493,14 @@ export default function SettingsPage() {
             })}
 
             {/* Test Mode Toggle */}
-            <div className="flex items-center justify-between p-4 bg-navy-700 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg">
               <div>
                 <p className="text-white font-medium">Test Mode</p>
-                <p className="text-xs text-slate-400">Use demo data when platforms aren&apos;t connected yet</p>
+                <p className="text-xs text-zinc-400">Use demo data when platforms aren&apos;t connected yet</p>
               </div>
               <button
                 onClick={() => { const next = !testMode; setTestMode(next); toast.success('Test mode ' + (next ? 'enabled' : 'disabled')); }}
-                className={`relative w-12 h-6 rounded-full transition-colors ${testMode ? 'bg-accent-blue' : 'bg-navy-600'}`}
+                className={`relative w-12 h-6 rounded-full transition-colors ${testMode ? 'bg-red-500' : 'bg-zinc-700'}`}
               >
                 <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${testMode ? 'left-6' : 'left-0.5'}`} />
               </button>
@@ -509,9 +509,9 @@ export default function SettingsPage() {
         </div>
 
         {/* Billing */}
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <CreditCard size={20} className="text-accent-blue" />
+            <CreditCard size={20} className="text-red-500" />
             <h2 className="text-lg font-semibold text-white">Billing</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -520,16 +520,16 @@ export default function SettingsPage() {
                 key={key}
                 className={`border rounded-xl p-6 ${
                   restaurant?.subscription_tier === key
-                    ? 'border-accent-blue bg-accent-blue/5'
-                    : 'border-navy-700'
+                    ? 'border-red-500 bg-red-500/5'
+                    : 'border-zinc-800'
                 }`}
               >
                 <h3 className="text-white font-bold text-lg">{plan.name}</h3>
-                <p className="text-2xl font-bold text-accent-amber mt-1">{plan.priceDisplay}</p>
+                <p className="text-2xl font-bold text-red-400 mt-1">{plan.priceDisplay}</p>
                 <ul className="mt-4 space-y-2">
                   {plan.features.map((f, i) => (
-                    <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
-                      <span className="text-accent-blue mt-0.5">&#10003;</span> {f}
+                    <li key={i} className="text-sm text-zinc-300 flex items-start gap-2">
+                      <span className="text-red-500 mt-0.5">&#10003;</span> {f}
                     </li>
                   ))}
                 </ul>

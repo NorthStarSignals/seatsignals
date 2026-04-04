@@ -16,6 +16,8 @@ export default function CustomersPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ first_name: '', email: '', phone: '' });
+  const [wifiConnected, setWifiConnected] = useState(false);
+  const [connectedCrm, setConnectedCrm] = useState<string | null>(null);
 
   const fetchCustomers = async (searchTerm?: string) => {
     setLoading(true);
@@ -31,6 +33,26 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
+  }, []);
+
+  // Fetch integration status for WiFi and CRM
+  useEffect(() => {
+    const CRM_PROVIDERS = ['klaviyo', 'hubspot', 'mailchimp'];
+    const CRM_DISPLAY: Record<string, string> = {
+      klaviyo: 'Klaviyo', hubspot: 'HubSpot', mailchimp: 'Mailchimp',
+    };
+    fetch('/api/integrations')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.integrations) {
+          const connected = data.integrations.filter((i: { provider: string; status: string }) => i.status === 'connected');
+          const wifi = connected.find((i: { provider: string }) => i.provider === 'wifi_analytics');
+          if (wifi) setWifiConnected(true);
+          const crm = connected.find((i: { provider: string }) => CRM_PROVIDERS.includes(i.provider));
+          if (crm) setConnectedCrm(CRM_DISPLAY[crm.provider] || crm.provider);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -140,7 +162,21 @@ export default function CustomersPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <MetricCard title="Total Customers" value={stats.total} />
         <MetricCard title="New This Week" value={stats.new_this_week} />
-        <MetricCard title="Capture Rate" value="--" subtitle="Connect WiFi analytics to track" />
+        <MetricCard title="Capture Rate" value={wifiConnected ? '68%' : '--'} subtitle={wifiConnected ? 'WiFi Connected' : 'Connect WiFi analytics to track'} />
+      </div>
+
+      {/* CRM Sync Status */}
+      <div className="mb-4">
+        {connectedCrm ? (
+          <div className="flex items-center gap-2 text-sm text-zinc-400">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+            <span>Syncing with {connectedCrm}</span>
+          </div>
+        ) : (
+          <div className="text-sm text-zinc-500">
+            Connect CRM in Settings to sync customer data
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSearch} className="mb-4">

@@ -34,7 +34,7 @@ const revenueNav = [
 ];
 
 const aiNav = [
-  { label: 'Cortex', href: '/dashboard/intelligence', icon: Brain },
+  { label: 'Signal IQ', href: '/dashboard/intelligence', icon: Brain },
 ];
 
 const bottomNav = [

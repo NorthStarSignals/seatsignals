@@ -29,58 +29,76 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
 ];
 
 interface LeadScore {
-  customer_id: string;
-  first_name: string;
-  email: string;
+  id: string;
+  name: string;
   score: number;
-  reasoning: string;
-  recommended_action: string;
+  tier: string;
+  frequencyScore: number;
+  spendScore: number;
+  recencyScore: number;
+  referralScore: number;
+  birthdayScore: number;
+  revenuePotential: number;
+  recommendation: string;
 }
 
 interface ChurnAlert {
-  customer_id: string;
-  first_name: string;
-  email: string;
-  risk_level: string;
-  days_since_visit: number;
-  reasoning: string;
-  win_back_strategy: string;
+  id: string;
+  name: string;
+  riskLevel: string;
+  riskScore: number;
+  revenueAtRisk: number;
+  pattern: string;
+  winBackStrategy: string;
+  urgency: string;
+  channelRecommendation: string;
 }
 
 interface ForecastData {
-  weekly_forecast: Array<{ week: string; predicted_revenue: number; confidence: number }>;
-  monthly_total: number;
-  growth_trend: string;
-  key_drivers: string[];
+  forecast: {
+    month1?: { label: string; dineIn: number; catering: number; corporate: number; deadHours: number; birthdays: number; total: number; confidence: string };
+    month2?: { label: string; dineIn: number; catering: number; corporate: number; deadHours: number; birthdays: number; total: number; confidence: string };
+    month3?: { label: string; dineIn: number; catering: number; corporate: number; deadHours: number; birthdays: number; total: number; confidence: string };
+  };
+  totalForecast: number;
+  growthRate: number;
+  confidenceNote: string;
+  keyDrivers: string[];
+  risks: string[];
+  whatIf: Array<{ scenario: string; impact: string; confidence: string; reasoning: string }>;
 }
 
 interface InsightData {
-  executive_summary: string;
-  top_opportunities: Array<{ title: string; impact: string; effort: string; description: string }>;
-  risks: Array<{ title: string; severity: string; mitigation: string }>;
-  recommended_actions: Array<{ priority: number; action: string; expected_impact: string }>;
+  overallGrade: string;
+  headline: string;
+  sections: Array<{ title: string; icon: string; status: string; findings: string[]; recommendations: Array<{ action: string; impact: string; priority: string; timeframe: string }> }>;
+  quickWins: Array<{ action: string; expectedImpact: string }>;
+  strategicPriorities: Array<{ priority: string; reasoning: string; timeline: string }>;
+  revenueOpportunities: Array<{ opportunity: string; estimatedValue: string; effort: string }>;
 }
 
 interface WinBackData {
-  reactivated: number;
-  campaigns: Array<{ customer_id: string; first_name: string; email: string; strategy: string; offer: string }>;
+  campaigns: Array<{ id: string; name: string; email: { subject: string; body: string }; sms: { primary: string; variant: string }; offer: string; sendTime: string; conversionProbability: number; estimatedRevenue: number }>;
+  summary: { totalCampaigns: number; totalEstimatedRevenue: number; avgConversionRate: number };
 }
 
 interface CompetitorData {
-  market_position: string;
-  competitors: Array<{ name: string; strengths: string; weaknesses: string; threat_level: string }>;
-  opportunities: string[];
-  strategic_recommendations: string[];
+  marketPosition: { summary: string; strengths: string[]; vulnerabilities: string[] };
+  competitorProfiles: Array<{ type: string; threatLevel: string; likelyStrengths: string[]; likelyWeaknesses: string[]; howToBeat: string }>;
+  differentiationOpportunities: Array<{ opportunity: string; description: string; competitiveAdvantage: string; investmentLevel: string }>;
+  marketTrends: Array<{ trend: string; impact: string; actionItem: string }>;
+  pricingInsights: { strategy: string; tactics: string[] };
+  digitalPresence: { recommendations: string[]; quickWins: string[] };
 }
 
 interface MarketingContent {
-  social_posts: Array<{ platform: string; content: string; best_time: string }>;
-  email_campaign: { subject: string; body: string };
-  sms_message: string;
-  content_calendar: Array<{ day: string; theme: string; content_type: string }>;
+  socialMedia: Array<{ platform: string; type: string; content: string; hashtags: string[]; bestTimeToPost: string; hook: string }>;
+  emailCampaigns: Array<{ name: string; subject: string; previewText: string; body: string; cta: string; audience: string; sendTime: string }>;
+  smsCampaigns: Array<{ name: string; message: string; variant: string; audience: string; expectedResponse: string }>;
+  contentCalendar: Array<{ day: string; theme: string; platform: string; idea: string }>;
 }
 
-export default function CortexPage() {
+export default function SignalIQPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('lead-scores');
   const [loading, setLoading] = useState(false);
 
@@ -123,13 +141,13 @@ export default function CortexPage() {
       const data = await res.json();
 
       switch (tab) {
-        case 'lead-scores': setLeadScores(data.scores || data); break;
-        case 'churn-alerts': setChurnAlerts(data.alerts || data); break;
-        case 'revenue-forecast': setForecast(data.forecast || data); break;
-        case 'ai-insights': setInsights(data.report || data); break;
+        case 'lead-scores': setLeadScores(data.leads || []); break;
+        case 'churn-alerts': setChurnAlerts(data.alerts || []); break;
+        case 'revenue-forecast': setForecast(data); break;
+        case 'ai-insights': setInsights(data); break;
         case 'win-back': setWinBack(data); break;
-        case 'competitor-analysis': setCompetitor(data.analysis || data); break;
-        case 'marketing-ai': setMarketing(data.content || data); break;
+        case 'competitor-analysis': setCompetitor(data); break;
+        case 'marketing-ai': setMarketing(data); break;
       }
 
       toast.success('Analysis complete');
@@ -170,18 +188,23 @@ export default function CortexPage() {
             {leadScores ? (
               <div className="space-y-3">
                 {leadScores.map((lead, i) => (
-                  <div key={lead.customer_id || i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                  <div key={lead.id || i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <span className="text-white font-medium">{lead.first_name || lead.email}</span>
-                        <span className="text-zinc-500 text-xs ml-2">{lead.email}</span>
+                        <span className="text-white font-medium">{lead.name}</span>
+                        <span className={`text-xs ml-2 px-2 py-0.5 rounded-full ${
+                          lead.tier === 'VIP' ? 'bg-emerald-500/10 text-emerald-400' :
+                          lead.tier === 'High Value' ? 'bg-blue-500/10 text-blue-400' :
+                          lead.tier === 'Growth' ? 'bg-yellow-500/10 text-yellow-400' :
+                          'bg-zinc-500/10 text-zinc-400'
+                        }`}>{lead.tier}</span>
                       </div>
                       <span className={`text-lg font-bold ${lead.score >= 80 ? 'text-emerald-400' : lead.score >= 50 ? 'text-red-400' : 'text-zinc-400'}`}>
                         {lead.score}/100
                       </span>
                     </div>
-                    <p className="text-zinc-400 text-sm">{lead.reasoning}</p>
-                    <p className="text-red-400 text-xs mt-2">Action: {lead.recommended_action}</p>
+                    <p className="text-zinc-400 text-sm">{lead.recommendation}</p>
+                    <p className="text-zinc-500 text-xs mt-2">90-day potential: ${lead.revenuePotential?.toLocaleString()}</p>
                   </div>
                 ))}
               </div>
@@ -203,20 +226,20 @@ export default function CortexPage() {
             {churnAlerts ? (
               <div className="space-y-3">
                 {churnAlerts.map((alert, i) => (
-                  <div key={alert.customer_id || i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                  <div key={alert.id || i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-white font-medium">{alert.first_name || alert.email}</span>
+                      <span className="text-white font-medium">{alert.name}</span>
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        alert.risk_level === 'high' ? 'bg-red-500/10 text-red-400' :
-                        alert.risk_level === 'medium' ? 'bg-red-500/10 text-red-300' :
+                        alert.riskLevel === 'Critical' ? 'bg-red-500/10 text-red-400' :
+                        alert.riskLevel === 'High' ? 'bg-red-500/10 text-red-300' :
                         'bg-zinc-500/10 text-zinc-400'
                       }`}>
-                        {alert.risk_level} risk
+                        {alert.riskLevel} risk ({alert.riskScore}/100)
                       </span>
                     </div>
-                    <p className="text-zinc-400 text-sm">{alert.reasoning}</p>
-                    <p className="text-zinc-500 text-xs mt-1">{alert.days_since_visit} days since last visit</p>
-                    <p className="text-red-400 text-xs mt-2">Strategy: {alert.win_back_strategy}</p>
+                    <p className="text-zinc-400 text-sm">{alert.pattern}</p>
+                    <p className="text-zinc-500 text-xs mt-1">${alert.revenueAtRisk?.toLocaleString()} revenue at risk - {alert.urgency}</p>
+                    <p className="text-red-400 text-xs mt-2">Strategy ({alert.channelRecommendation}): {alert.winBackStrategy}</p>
                   </div>
                 ))}
               </div>
@@ -239,33 +262,51 @@ export default function CortexPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
-                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Monthly Projection</p>
-                    <p className="text-2xl font-bold text-white">${forecast.monthly_total?.toLocaleString()}</p>
+                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">90-Day Forecast</p>
+                    <p className="text-2xl font-bold text-white">${forecast.totalForecast?.toLocaleString()}</p>
                   </div>
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
-                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Trend</p>
-                    <p className="text-2xl font-bold text-emerald-400">{forecast.growth_trend}</p>
+                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Growth Rate</p>
+                    <p className="text-2xl font-bold text-emerald-400">{forecast.growthRate}%</p>
                   </div>
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                     <p className="text-zinc-400 text-xs uppercase tracking-wider mb-2">Key Drivers</p>
                     <ul className="space-y-1">
-                      {forecast.key_drivers?.map((d, i) => (
+                      {forecast.keyDrivers?.map((d, i) => (
                         <li key={i} className="text-zinc-300 text-sm">- {d}</li>
                       ))}
                     </ul>
                   </div>
                 </div>
-                {forecast.weekly_forecast && (
+                {forecast.forecast && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-3">Weekly Breakdown</p>
+                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-3">Monthly Breakdown</p>
                     <div className="space-y-2">
-                      {forecast.weekly_forecast.map((w, i) => (
-                        <div key={i} className="flex items-center justify-between">
-                          <span className="text-zinc-300 text-sm">{w.week}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-white font-medium">${w.predicted_revenue?.toLocaleString()}</span>
-                            <span className="text-zinc-500 text-xs">{w.confidence}% confidence</span>
+                      {(['month1', 'month2', 'month3'] as const).map((key) => {
+                        const m = forecast.forecast[key];
+                        if (!m) return null;
+                        return (
+                          <div key={key} className="flex items-center justify-between">
+                            <span className="text-zinc-300 text-sm">{m.label}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-white font-medium">${m.total?.toLocaleString()}</span>
+                              <span className="text-zinc-500 text-xs">{m.confidence} confidence</span>
+                            </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {forecast.whatIf && forecast.whatIf.length > 0 && (
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-3">What-If Scenarios</p>
+                    <div className="space-y-3">
+                      {forecast.whatIf.map((w, i) => (
+                        <div key={i} className="border-l-2 border-red-500 pl-3">
+                          <p className="text-white text-sm font-medium">{w.scenario}</p>
+                          <p className="text-emerald-400 text-sm">{w.impact}</p>
+                          <p className="text-zinc-500 text-xs">{w.reasoning} ({w.confidence})</p>
                         </div>
                       ))}
                     </div>
@@ -290,50 +331,68 @@ export default function CortexPage() {
             {insights ? (
               <div className="space-y-4">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                  <h3 className="text-white font-semibold mb-2">Executive Summary</h3>
-                  <p className="text-zinc-300 text-sm">{insights.executive_summary}</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-white font-semibold">Business Health</h3>
+                    <span className="text-2xl font-bold text-red-400">{insights.overallGrade}</span>
+                  </div>
+                  <p className="text-zinc-300 text-sm">{insights.headline}</p>
                 </div>
-                {insights.top_opportunities && (
+                {insights.sections && insights.sections.length > 0 && (
+                  <div className="space-y-3">
+                    {insights.sections.map((section, i) => (
+                      <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-white font-medium">{section.title}</h4>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            section.status === 'strong' ? 'bg-emerald-500/10 text-emerald-400' :
+                            section.status === 'needs_attention' ? 'bg-yellow-500/10 text-yellow-400' :
+                            'bg-red-500/10 text-red-400'
+                          }`}>{section.status}</span>
+                        </div>
+                        <ul className="space-y-1 mb-3">
+                          {section.findings?.map((f, j) => (
+                            <li key={j} className="text-zinc-400 text-sm">- {f}</li>
+                          ))}
+                        </ul>
+                        {section.recommendations?.map((rec, j) => (
+                          <div key={j} className="border-l-2 border-red-500 pl-3 mb-2">
+                            <p className="text-zinc-300 text-sm">{rec.action}</p>
+                            <div className="flex gap-4 mt-1">
+                              <span className="text-xs text-emerald-400">{rec.impact}</span>
+                              <span className="text-xs text-zinc-500">{rec.priority} / {rec.timeframe}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {insights.quickWins && insights.quickWins.length > 0 && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <h3 className="text-white font-semibold mb-3">Top Opportunities</h3>
-                    <div className="space-y-3">
-                      {insights.top_opportunities.map((opp, i) => (
-                        <div key={i} className="border-l-2 border-red-500 pl-3">
-                          <p className="text-white text-sm font-medium">{opp.title}</p>
-                          <p className="text-zinc-400 text-sm">{opp.description}</p>
-                          <div className="flex gap-4 mt-1">
-                            <span className="text-xs text-emerald-400">Impact: {opp.impact}</span>
-                            <span className="text-xs text-zinc-500">Effort: {opp.effort}</span>
+                    <h3 className="text-white font-semibold mb-3">Quick Wins</h3>
+                    <div className="space-y-2">
+                      {insights.quickWins.map((qw, i) => (
+                        <div key={i} className="flex gap-3 items-start">
+                          <span className="text-red-500 font-bold text-sm">#{i + 1}</span>
+                          <div>
+                            <p className="text-zinc-300 text-sm">{qw.action}</p>
+                            <p className="text-emerald-400 text-xs">{qw.expectedImpact}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-                {insights.risks && (
+                {insights.revenueOpportunities && insights.revenueOpportunities.length > 0 && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <h3 className="text-white font-semibold mb-3">Risks</h3>
+                    <h3 className="text-white font-semibold mb-3">Revenue Opportunities</h3>
                     <div className="space-y-3">
-                      {insights.risks.map((risk, i) => (
-                        <div key={i} className="border-l-2 border-red-400 pl-3">
-                          <p className="text-white text-sm font-medium">{risk.title}</p>
-                          <span className="text-xs text-red-400">{risk.severity}</span>
-                          <p className="text-zinc-400 text-sm mt-1">{risk.mitigation}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {insights.recommended_actions && (
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <h3 className="text-white font-semibold mb-3">Recommended Actions</h3>
-                    <div className="space-y-2">
-                      {insights.recommended_actions.map((action, i) => (
-                        <div key={i} className="flex gap-3 items-start">
-                          <span className="text-red-500 font-bold text-sm">#{action.priority}</span>
-                          <div>
-                            <p className="text-zinc-300 text-sm">{action.action}</p>
-                            <p className="text-zinc-500 text-xs">{action.expected_impact}</p>
+                      {insights.revenueOpportunities.map((opp, i) => (
+                        <div key={i} className="border-l-2 border-red-500 pl-3">
+                          <p className="text-white text-sm font-medium">{opp.opportunity}</p>
+                          <div className="flex gap-4 mt-1">
+                            <span className="text-xs text-emerald-400">{opp.estimatedValue}</span>
+                            <span className="text-xs text-zinc-500">Effort: {opp.effort}</span>
                           </div>
                         </div>
                       ))}
@@ -358,16 +417,29 @@ export default function CortexPage() {
             </div>
             {winBack ? (
               <div>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 text-center">
-                  <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Campaigns Sent</p>
-                  <p className="text-2xl font-bold text-white">{winBack.reactivated}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Campaigns</p>
+                    <p className="text-2xl font-bold text-white">{winBack.summary?.totalCampaigns || 0}</p>
+                  </div>
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Est. Revenue</p>
+                    <p className="text-2xl font-bold text-emerald-400">${winBack.summary?.totalEstimatedRevenue?.toLocaleString() || 0}</p>
+                  </div>
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                    <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Avg Conversion</p>
+                    <p className="text-2xl font-bold text-white">{winBack.summary?.avgConversionRate || 0}%</p>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   {winBack.campaigns?.map((c, i) => (
                     <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                      <p className="text-white font-medium">{c.first_name || c.email}</p>
-                      <p className="text-zinc-400 text-sm mt-1">{c.strategy}</p>
-                      <p className="text-red-400 text-xs mt-2">Offer: {c.offer}</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-white font-medium">{c.name}</p>
+                        <span className="text-emerald-400 text-xs">{c.conversionProbability}% conversion</span>
+                      </div>
+                      <p className="text-zinc-400 text-sm mt-1">{c.sms?.primary}</p>
+                      <p className="text-red-400 text-xs mt-2">Offer: {c.offer} | Best send: {c.sendTime}</p>
                     </div>
                   ))}
                 </div>
@@ -391,50 +463,81 @@ export default function CortexPage() {
               <div className="space-y-4">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
                   <h3 className="text-white font-semibold mb-2">Market Position</h3>
-                  <p className="text-zinc-300 text-sm">{competitor.market_position}</p>
+                  <p className="text-zinc-300 text-sm">{competitor.marketPosition?.summary}</p>
+                  {competitor.marketPosition?.strengths && (
+                    <div className="mt-3">
+                      <p className="text-emerald-400 text-xs font-medium mb-1">Strengths</p>
+                      <ul className="space-y-1">
+                        {competitor.marketPosition.strengths.map((s, i) => (
+                          <li key={i} className="text-zinc-400 text-sm">- {s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {competitor.marketPosition?.vulnerabilities && (
+                    <div className="mt-3">
+                      <p className="text-red-400 text-xs font-medium mb-1">Vulnerabilities</p>
+                      <ul className="space-y-1">
+                        {competitor.marketPosition.vulnerabilities.map((v, i) => (
+                          <li key={i} className="text-zinc-400 text-sm">- {v}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-                {competitor.competitors && (
+                {competitor.competitorProfiles && competitor.competitorProfiles.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {competitor.competitors.map((c, i) => (
+                    {competitor.competitorProfiles.map((c, i) => (
                       <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-white font-medium">{c.name}</h4>
+                          <h4 className="text-white font-medium">{c.type}</h4>
                           <span className={`text-xs px-2 py-1 rounded-full ${
-                            c.threat_level === 'high' ? 'bg-red-500/10 text-red-400' :
-                            c.threat_level === 'medium' ? 'bg-red-500/10 text-red-300' :
+                            c.threatLevel === 'high' ? 'bg-red-500/10 text-red-400' :
+                            c.threatLevel === 'medium' ? 'bg-red-500/10 text-red-300' :
                             'bg-zinc-500/10 text-zinc-400'
                           }`}>
-                            {c.threat_level} threat
+                            {c.threatLevel} threat
                           </span>
                         </div>
-                        <p className="text-emerald-400 text-xs mb-1">Strengths: {c.strengths}</p>
-                        <p className="text-red-400 text-xs">Weaknesses: {c.weaknesses}</p>
+                        <p className="text-emerald-400 text-xs mb-1">Strengths: {c.likelyStrengths?.join(', ')}</p>
+                        <p className="text-red-400 text-xs mb-1">Weaknesses: {c.likelyWeaknesses?.join(', ')}</p>
+                        <p className="text-zinc-400 text-xs mt-2">How to beat: {c.howToBeat}</p>
                       </div>
                     ))}
                   </div>
                 )}
-                {competitor.opportunities && (
+                {competitor.differentiationOpportunities && competitor.differentiationOpportunities.length > 0 && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <h3 className="text-white font-semibold mb-3">Opportunities</h3>
-                    <ul className="space-y-2">
-                      {competitor.opportunities.map((o, i) => (
-                        <li key={i} className="text-zinc-300 text-sm flex gap-2">
-                          <span className="text-red-500">-</span> {o}
-                        </li>
+                    <h3 className="text-white font-semibold mb-3">Differentiation Opportunities</h3>
+                    <div className="space-y-3">
+                      {competitor.differentiationOpportunities.map((o, i) => (
+                        <div key={i} className="border-l-2 border-red-500 pl-3">
+                          <p className="text-white text-sm font-medium">{o.opportunity}</p>
+                          <p className="text-zinc-400 text-sm">{o.description}</p>
+                          <div className="flex gap-4 mt-1">
+                            <span className="text-xs text-emerald-400">{o.competitiveAdvantage}</span>
+                            <span className="text-xs text-zinc-500">Investment: {o.investmentLevel}</span>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
-                {competitor.strategic_recommendations && (
+                {competitor.marketTrends && competitor.marketTrends.length > 0 && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <h3 className="text-white font-semibold mb-3">Strategic Recommendations</h3>
-                    <ul className="space-y-2">
-                      {competitor.strategic_recommendations.map((r, i) => (
-                        <li key={i} className="text-zinc-300 text-sm flex gap-2">
-                          <span className="text-red-500 font-bold">#{i + 1}</span> {r}
-                        </li>
+                    <h3 className="text-white font-semibold mb-3">Market Trends</h3>
+                    <div className="space-y-2">
+                      {competitor.marketTrends.map((t, i) => (
+                        <div key={i} className="flex gap-3 items-start">
+                          <span className="text-red-500 font-bold text-sm">#{i + 1}</span>
+                          <div>
+                            <p className="text-zinc-300 text-sm font-medium">{t.trend}</p>
+                            <p className="text-zinc-400 text-xs">{t.impact}</p>
+                            <p className="text-emerald-400 text-xs">{t.actionItem}</p>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </div>
@@ -456,62 +559,77 @@ export default function CortexPage() {
             {marketing ? (
               <div className="space-y-4">
                 {/* Social posts */}
-                {marketing.social_posts && (
+                {marketing.socialMedia && marketing.socialMedia.length > 0 && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
                     <h3 className="text-white font-semibold mb-3">Social Media Posts</h3>
                     <div className="space-y-3">
-                      {marketing.social_posts.map((post, i) => (
+                      {marketing.socialMedia.map((post, i) => (
                         <div key={i} className="bg-zinc-800 rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-red-400 uppercase font-medium">{post.platform}</span>
+                            <span className="text-xs text-red-400 uppercase font-medium">{post.platform} - {post.type}</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-zinc-500">Best: {post.best_time}</span>
+                              <span className="text-xs text-zinc-500">Best: {post.bestTimeToPost}</span>
                               <CopyButton text={post.content} id={`social-${i}`} />
                             </div>
                           </div>
                           <p className="text-zinc-300 text-sm">{post.content}</p>
+                          {post.hashtags && (
+                            <p className="text-zinc-500 text-xs mt-2">{post.hashtags.map(h => `#${h}`).join(' ')}</p>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Email campaign */}
-                {marketing.email_campaign && (
+                {/* Email campaigns */}
+                {marketing.emailCampaigns && marketing.emailCampaigns.length > 0 && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-white font-semibold">Email Campaign</h3>
-                      <CopyButton text={`Subject: ${marketing.email_campaign.subject}\n\n${marketing.email_campaign.body}`} id="email" />
-                    </div>
-                    <div className="bg-zinc-800 rounded-lg p-3">
-                      <p className="text-xs text-red-400 mb-1">Subject: {marketing.email_campaign.subject}</p>
-                      <p className="text-zinc-300 text-sm whitespace-pre-wrap">{marketing.email_campaign.body}</p>
-                    </div>
+                    <h3 className="text-white font-semibold mb-3">Email Campaigns</h3>
+                    {marketing.emailCampaigns.map((campaign, i) => (
+                      <div key={i} className="bg-zinc-800 rounded-lg p-3 mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-red-400 font-medium">{campaign.name}</span>
+                          <CopyButton text={`Subject: ${campaign.subject}\n\n${campaign.body}`} id={`email-${i}`} />
+                        </div>
+                        <p className="text-xs text-zinc-500 mb-1">Subject: {campaign.subject}</p>
+                        <p className="text-zinc-300 text-sm whitespace-pre-wrap">{campaign.body}</p>
+                        <div className="flex gap-4 mt-2">
+                          <span className="text-xs text-zinc-500">CTA: {campaign.cta}</span>
+                          <span className="text-xs text-zinc-500">Send: {campaign.sendTime}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
-                {/* SMS */}
-                {marketing.sms_message && (
+                {/* SMS campaigns */}
+                {marketing.smsCampaigns && marketing.smsCampaigns.length > 0 && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-white font-semibold">SMS Message</h3>
-                      <CopyButton text={marketing.sms_message} id="sms" />
-                    </div>
-                    <div className="bg-zinc-800 rounded-lg p-3">
-                      <p className="text-zinc-300 text-sm">{marketing.sms_message}</p>
-                    </div>
+                    <h3 className="text-white font-semibold mb-3">SMS Campaigns</h3>
+                    {marketing.smsCampaigns.map((sms, i) => (
+                      <div key={i} className="bg-zinc-800 rounded-lg p-3 mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-red-400 font-medium">{sms.name}</span>
+                          <CopyButton text={sms.message} id={`sms-${i}`} />
+                        </div>
+                        <p className="text-zinc-300 text-sm">{sms.message}</p>
+                        <p className="text-zinc-500 text-xs mt-1">A/B variant: {sms.variant}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {/* Content calendar */}
-                {marketing.content_calendar && (
+                {marketing.contentCalendar && marketing.contentCalendar.length > 0 && (
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
                     <h3 className="text-white font-semibold mb-3">Content Calendar</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {marketing.content_calendar.map((item, i) => (
+                      {marketing.contentCalendar.map((item, i) => (
                         <div key={i} className="bg-zinc-800 rounded-lg p-3">
                           <p className="text-white text-sm font-medium">{item.day}</p>
-                          <p className="text-zinc-400 text-xs">{item.theme} - {item.content_type}</p>
+                          <p className="text-zinc-400 text-xs">{item.theme} - {item.platform}</p>
+                          <p className="text-zinc-500 text-xs">{item.idea}</p>
                         </div>
                       ))}
                     </div>
@@ -531,9 +649,9 @@ export default function CortexPage() {
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
           <Brain size={24} className="text-red-500" />
-          <h1 className="text-2xl font-bold text-white">Cortex</h1>
+          <h1 className="text-2xl font-bold text-white">Signal <span className="text-red-500">IQ</span></h1>
         </div>
-        <p className="text-zinc-500 text-sm">AI-powered insights for an unfair advantage</p>
+        <p className="text-zinc-500 text-sm">AI-powered intelligence engine — your unfair advantage</p>
       </div>
 
       {/* Tabs */}

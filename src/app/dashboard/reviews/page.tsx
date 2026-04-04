@@ -25,6 +25,7 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [connectedReviewPlatforms, setConnectedReviewPlatforms] = useState<string[]>([]);
 
   const fetchReviews = async () => {
     const res = await fetch('/api/reviews');
@@ -37,6 +38,27 @@ export default function ReviewsPage() {
   };
 
   useEffect(() => { fetchReviews(); }, []);
+
+  // Fetch connected review platforms
+  useEffect(() => {
+    const REVIEW_PROVIDERS = ['google_business', 'yelp', 'tripadvisor'];
+    const REVIEW_DISPLAY: Record<string, string> = {
+      google_business: 'Google Business',
+      yelp: 'Yelp',
+      tripadvisor: 'TripAdvisor',
+    };
+    fetch('/api/integrations')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.integrations) {
+          const connected = data.integrations
+            .filter((i: { provider: string; status: string }) => REVIEW_PROVIDERS.includes(i.provider) && i.status === 'connected')
+            .map((i: { provider: string }) => REVIEW_DISPLAY[i.provider] || i.provider);
+          setConnectedReviewPlatforms(connected);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const [generating, setGenerating] = useState(false);
 
@@ -100,6 +122,20 @@ export default function ReviewsPage() {
         <MetricCard title="Total Reviews" value={stats.total} />
         <MetricCard title="Response Rate" value={`${stats.response_rate}%`} />
         <MetricCard title="This Month" value={stats.this_month} />
+      </div>
+
+      {/* Connected Review Platforms Indicator */}
+      <div className="mb-6">
+        {connectedReviewPlatforms.length > 0 ? (
+          <div className="flex items-center gap-2 text-sm text-zinc-400">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+            <span>Monitoring: {connectedReviewPlatforms.join(', ')}</span>
+          </div>
+        ) : (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-500">
+            Connect review platforms in Settings to auto-monitor reviews
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

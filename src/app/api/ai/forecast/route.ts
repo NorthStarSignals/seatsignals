@@ -55,7 +55,7 @@ export async function POST() {
   // Corporate accounts
   const { data: corpAccounts } = await supabase
     .from('corporate_accounts')
-    .select('company_name, monthly_value')
+    .select('company_name, total_lifetime_value')
     .eq('restaurant_id', rid);
 
   // Customer stats
@@ -105,7 +105,7 @@ export async function POST() {
     }
   }
 
-  const corpMonthlyValue = (corpAccounts || []).reduce((s, a) => s + (a.monthly_value || 0), 0);
+  const corpMonthlyValue = (corpAccounts || []).reduce((s, a) => s + (a.total_lifetime_value || 0), 0);
 
   const anthropic = new Anthropic();
 
