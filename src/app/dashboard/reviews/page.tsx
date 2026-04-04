@@ -81,7 +81,7 @@ export default function ReviewsPage() {
       <Star
         key={i}
         size={14}
-        className={i < rating ? 'text-accent-amber fill-accent-amber' : 'text-slate-600'}
+        className={i < rating ? 'text-red-500 fill-red-500' : 'text-zinc-600'}
       />
     ));
   };
@@ -104,45 +104,45 @@ export default function ReviewsPage() {
 
       <div className="space-y-4">
         {loading ? (
-          <div className="bg-navy-800 border border-navy-700 rounded-xl p-8 text-center text-slate-400">Loading reviews...</div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center text-zinc-400">Loading reviews...</div>
         ) : reviews.length === 0 ? (
-          <div className="bg-navy-800 border border-navy-700 rounded-xl p-8 text-center text-slate-400">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center text-zinc-400">
             No reviews yet. Click &quot;Generate Test Reviews&quot; to simulate reviews, or connect your Google Business Profile in Settings.
           </div>
         ) : (
           reviews.map((review) => (
-            <div key={review.review_id} className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+            <div key={review.review_id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-white font-medium">{review.author}</span>
                     <div className="flex gap-0.5">{renderStars(review.rating)}</div>
                   </div>
-                  <p className="text-xs text-slate-500">{formatDate(review.created_at)} via {review.platform}</p>
+                  <p className="text-xs text-zinc-500">{formatDate(review.created_at)} via {review.platform}</p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full ${
                   review.response_status === 'posted'
                     ? 'bg-emerald-500/10 text-emerald-400'
                     : review.response_status === 'pending_approval'
-                    ? 'bg-amber-500/10 text-amber-400'
-                    : 'bg-slate-500/10 text-slate-400'
+                    ? 'bg-red-500/10 text-red-400'
+                    : 'bg-zinc-500/10 text-zinc-400'
                 }`}>
                   {review.response_status === 'posted' ? 'Responded' : review.response_status === 'pending_approval' ? 'Pending Approval' : 'No Response'}
                 </span>
               </div>
 
-              <p className="text-slate-300 text-sm mb-4">{review.text}</p>
+              <p className="text-zinc-300 text-sm mb-4">{review.text}</p>
 
               {review.response_text && (
-                <div className="border-t border-navy-700 pt-3">
-                  <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">AI Response</p>
+                <div className="border-t border-zinc-800 pt-3">
+                  <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider">AI Response</p>
                   {editingId === review.review_id ? (
                     <div className="space-y-2">
                       <textarea
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
                         rows={3}
-                        className="w-full bg-navy-700 border border-navy-600 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                       <div className="flex gap-2">
                         <Button size="sm" variant="cta" onClick={() => approveResponse(review.review_id, editText)}>
@@ -153,7 +153,7 @@ export default function ReviewsPage() {
                     </div>
                   ) : (
                     <div>
-                      <p className="text-slate-300 text-sm">{review.response_text}</p>
+                      <p className="text-zinc-300 text-sm">{review.response_text}</p>
                       {review.response_status === 'pending_approval' && (
                         <div className="flex gap-2 mt-3">
                           <Button

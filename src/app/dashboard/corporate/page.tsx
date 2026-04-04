@@ -46,37 +46,37 @@ export default function CorporatePage() {
         <MetricCard title="Total LTV" value={formatCurrency(stats.total_ltv)} />
       </div>
 
-      <div className="bg-navy-800 border border-navy-700 rounded-xl overflow-hidden">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-slate-400">Loading accounts...</div>
+          <div className="p-8 text-center text-zinc-400">Loading accounts...</div>
         ) : accounts.length === 0 ? (
-          <div className="p-8 text-center text-slate-400">
+          <div className="p-8 text-center text-zinc-400">
             No corporate accounts yet. They&apos;ll appear automatically when catering leads convert.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-navy-700">
-                  <th className="text-left p-4 text-slate-400 font-medium">Company</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Contact</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Last Order</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Lifetime Value</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Status</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Portal</th>
+                <tr className="border-b border-zinc-800">
+                  <th className="text-left p-4 text-zinc-400 font-medium">Company</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Contact</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Last Order</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Lifetime Value</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Status</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Portal</th>
                 </tr>
               </thead>
               <tbody>
                 {accounts.map(account => (
-                  <tr key={account.account_id} className="border-b border-navy-700/50 hover:bg-navy-700/30">
+                  <tr key={account.account_id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <Building2 size={16} className="text-accent-blue" />
+                        <Building2 size={16} className="text-red-500" />
                         <span className="text-white font-medium">{account.company_name}</span>
                       </div>
                     </td>
-                    <td className="p-4 text-slate-300">{account.primary_contact}</td>
-                    <td className="p-4 text-slate-400">
+                    <td className="p-4 text-zinc-300">{account.primary_contact}</td>
+                    <td className="p-4 text-zinc-400">
                       {account.last_order_date ? formatDate(account.last_order_date) : 'No orders yet'}
                     </td>
                     <td className="p-4 text-white font-medium">
@@ -84,7 +84,7 @@ export default function CorporatePage() {
                     </td>
                     <td className="p-4">
                       {account.churn_risk_flag ? (
-                        <span className="flex items-center gap-1 text-xs text-amber-400">
+                        <span className="flex items-center gap-1 text-xs text-red-400">
                           <AlertTriangle size={14} /> Churn Risk
                         </span>
                       ) : (
@@ -96,7 +96,7 @@ export default function CorporatePage() {
                         href={`/corporate/${account.account_id}/${account.access_token}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-accent-blue hover:underline"
+                        className="text-xs text-red-400 hover:underline"
                       >
                         Open Portal
                       </a>

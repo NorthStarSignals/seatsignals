@@ -119,7 +119,7 @@ export default function BirthdaysPage() {
       </div>
 
       {/* Redemption form */}
-      <div className="bg-navy-800 border border-navy-700 rounded-xl p-6 mb-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-white mb-4">Redeem Offer Code</h2>
         <form onSubmit={handleRedeem} className="flex flex-wrap gap-3 items-end">
           <Input
@@ -149,19 +149,19 @@ export default function BirthdaysPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upcoming birthdays */}
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Upcoming Birthdays (30 days)</h2>
           {upcoming.length === 0 ? (
-            <p className="text-slate-400 text-sm">No upcoming birthdays.</p>
+            <p className="text-zinc-400 text-sm">No upcoming birthdays.</p>
           ) : (
             <div className="space-y-2">
               {upcoming.map((c) => (
-                <div key={c.customer_id} className="flex justify-between items-center p-3 bg-navy-700 rounded-lg">
+                <div key={c.customer_id} className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
                   <div>
                     <p className="text-white text-sm">{c.first_name || c.email}</p>
-                    <p className="text-slate-400 text-xs">{c.email}</p>
+                    <p className="text-zinc-400 text-xs">{c.email}</p>
                   </div>
-                  <span className="text-accent-amber text-sm">{formatDate(c.birthday)}</span>
+                  <span className="text-red-500 text-sm">{formatDate(c.birthday)}</span>
                 </div>
               ))}
             </div>
@@ -169,28 +169,28 @@ export default function BirthdaysPage() {
         </div>
 
         {/* Recent events */}
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Recent Events</h2>
           {loading ? (
-            <p className="text-slate-400 text-sm">Loading...</p>
+            <p className="text-zinc-400 text-sm">Loading...</p>
           ) : events.length === 0 ? (
-            <p className="text-slate-400 text-sm">No birthday events yet. Customers who enter their birthday on the capture form will appear here.</p>
+            <p className="text-zinc-400 text-sm">No birthday events yet. Customers who enter their birthday on the capture form will appear here.</p>
           ) : (
             <div className="space-y-2">
               {events.map((e) => (
-                <div key={e.event_id} className="flex justify-between items-center p-3 bg-navy-700 rounded-lg">
+                <div key={e.event_id} className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
                   <div>
                     <p className="text-white text-sm">
                       {e.customers?.first_name || 'Customer'} - {e.event_type}
                     </p>
-                    <p className="text-slate-400 text-xs">
+                    <p className="text-zinc-400 text-xs">
                       Code: {e.redemption_code} | Sent: {formatDate(e.offer_sent_at)}
                     </p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     e.redeemed
                       ? 'bg-emerald-500/10 text-emerald-400'
-                      : 'bg-amber-500/10 text-amber-400'
+                      : 'bg-red-500/10 text-red-400'
                   }`}>
                     {e.redeemed ? `Redeemed${e.check_total ? ` - ${formatCurrency(e.check_total)}` : ''}` : 'Pending'}
                   </span>

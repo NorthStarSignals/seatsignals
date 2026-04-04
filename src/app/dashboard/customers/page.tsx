@@ -106,7 +106,7 @@ export default function CustomersPage() {
     URL.revokeObjectURL(url);
   };
 
-  const inputClass = 'bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5';
+  const inputClass = 'bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm px-4 py-2.5';
 
   return (
     <div>
@@ -123,7 +123,7 @@ export default function CustomersPage() {
       </div>
 
       {showAdd && (
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 mb-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
           <h3 className="text-white font-medium mb-4">Add Customer</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
             <input className={inputClass} placeholder="First Name *" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} />
@@ -146,79 +146,79 @@ export default function CustomersPage() {
       <form onSubmit={handleSearch} className="mb-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
             <input
               type="text"
               placeholder="Search by name, email, or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-navy-800 border border-navy-700 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent-blue"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-500"
             />
           </div>
           <Button type="submit" variant="primary" size="md">Search</Button>
         </div>
       </form>
 
-      <div className="bg-navy-800 border border-navy-700 rounded-xl overflow-hidden">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-slate-400">Loading customers...</div>
+          <div className="p-8 text-center text-zinc-400">Loading customers...</div>
         ) : customers.length === 0 ? (
-          <div className="p-8 text-center text-slate-400">
+          <div className="p-8 text-center text-zinc-400">
             No customers yet. Print your QR code table tents to start capturing.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-navy-700">
-                  <th className="text-left p-4 text-slate-400 font-medium">Name</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Email</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Phone</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">First Visit</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Last Visit</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Visits</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Source</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Birthday</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Actions</th>
+                <tr className="border-b border-zinc-800">
+                  <th className="text-left p-4 text-zinc-400 font-medium">Name</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Email</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Phone</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">First Visit</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Last Visit</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Visits</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Source</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Birthday</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {customers.map((c) => (
-                  <tr key={c.customer_id} className="border-b border-navy-700/50 hover:bg-navy-700/30">
+                  <tr key={c.customer_id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
                     {editingId === c.customer_id ? (
                       <>
                         <td className="p-4"><input className={inputClass + ' w-full'} value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} /></td>
                         <td className="p-4"><input className={inputClass + ' w-full'} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></td>
                         <td className="p-4"><input className={inputClass + ' w-full'} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></td>
-                        <td className="p-4 text-slate-400">{formatDate(c.first_seen)}</td>
-                        <td className="p-4 text-slate-400">{formatDate(c.last_seen)}</td>
+                        <td className="p-4 text-zinc-400">{formatDate(c.first_seen)}</td>
+                        <td className="p-4 text-zinc-400">{formatDate(c.last_seen)}</td>
                         <td className="p-4 text-white">{c.visit_count}</td>
-                        <td className="p-4"><span className="px-2 py-0.5 rounded-full text-xs bg-accent-blue/10 text-accent-blue">{c.source}</span></td>
-                        <td className="p-4 text-slate-400">{c.birthday || '--'}</td>
+                        <td className="p-4"><span className="px-2 py-0.5 rounded-full text-xs bg-red-500/10 text-red-400">{c.source}</span></td>
+                        <td className="p-4 text-zinc-400">{c.birthday || '--'}</td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <button onClick={handleUpdate} className="text-xs text-accent-blue hover:underline">Save</button>
-                            <button onClick={resetForm} className="text-xs text-slate-400 hover:underline">Cancel</button>
+                            <button onClick={handleUpdate} className="text-xs text-red-400 hover:underline">Save</button>
+                            <button onClick={resetForm} className="text-xs text-zinc-400 hover:underline">Cancel</button>
                           </div>
                         </td>
                       </>
                     ) : (
                       <>
                         <td className="p-4 text-white">{c.first_name || '--'}</td>
-                        <td className="p-4 text-slate-300">{c.email}</td>
-                        <td className="p-4 text-slate-300">{c.phone || '--'}</td>
-                        <td className="p-4 text-slate-400">{formatDate(c.first_seen)}</td>
-                        <td className="p-4 text-slate-400">{formatDate(c.last_seen)}</td>
+                        <td className="p-4 text-zinc-300">{c.email}</td>
+                        <td className="p-4 text-zinc-300">{c.phone || '--'}</td>
+                        <td className="p-4 text-zinc-400">{formatDate(c.first_seen)}</td>
+                        <td className="p-4 text-zinc-400">{formatDate(c.last_seen)}</td>
                         <td className="p-4 text-white">{c.visit_count}</td>
                         <td className="p-4">
-                          <span className="px-2 py-0.5 rounded-full text-xs bg-accent-blue/10 text-accent-blue">
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/10 text-red-400">
                             {c.source}
                           </span>
                         </td>
-                        <td className="p-4 text-slate-400">{c.birthday || '--'}</td>
+                        <td className="p-4 text-zinc-400">{c.birthday || '--'}</td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <button onClick={() => startEdit(c)} className="text-xs text-accent-blue hover:underline">Edit</button>
+                            <button onClick={() => startEdit(c)} className="text-xs text-red-400 hover:underline">Edit</button>
                             <button onClick={() => handleDelete(c.customer_id)} className="text-xs text-red-400 hover:underline">Delete</button>
                           </div>
                         </td>

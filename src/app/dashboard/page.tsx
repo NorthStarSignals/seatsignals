@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { Users, MessageSquare, Target, Building2, Clock, Cake } from 'lucide-react';
+
 interface OverviewData {
   metrics: {
     total_customers: number;
@@ -24,14 +26,14 @@ interface OverviewData {
   activities: Array<{ text: string; time: string; type: string }>;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  customer: 'bg-blue-500/10 text-blue-400',
-  review: 'bg-amber-500/10 text-amber-400',
-  catering: 'bg-purple-500/10 text-purple-400',
-  retention: 'bg-emerald-500/10 text-emerald-400',
-  dead_hours: 'bg-red-500/10 text-red-400',
-  birthday: 'bg-pink-500/10 text-pink-400',
-  anniversary: 'bg-pink-500/10 text-pink-400',
+const TYPE_DOT_COLORS: Record<string, string> = {
+  customer: 'bg-seat-red',
+  review: 'bg-amber-500',
+  catering: 'bg-purple-500',
+  retention: 'bg-emerald-500',
+  dead_hours: 'bg-orange-500',
+  birthday: 'bg-pink-500',
+  anniversary: 'bg-pink-500',
 };
 
 export default function DashboardOverview() {
@@ -48,12 +50,15 @@ export default function DashboardOverview() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-2xl font-bold text-white mb-6">Overview</h1>
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold text-white tracking-tight">Overview</h1>
+          <p className="text-sm text-zinc-500 mt-1">Your restaurant at a glance</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-navy-800 border border-navy-700 rounded-xl p-6 animate-pulse">
-              <div className="h-4 bg-navy-700 rounded w-20 mb-2"></div>
-              <div className="h-8 bg-navy-700 rounded w-16"></div>
+            <div key={i} className="bg-seat-card border border-seat-border rounded-xl p-5 animate-pulse">
+              <div className="h-3 bg-zinc-800 rounded w-20 mb-3"></div>
+              <div className="h-7 bg-zinc-800 rounded w-16"></div>
             </div>
           ))}
         </div>
@@ -69,7 +74,7 @@ export default function DashboardOverview() {
     { label: 'Repeat Visits', value: r.repeat_visits, color: 'bg-emerald-500' },
     { label: 'Catering', value: r.catering, color: 'bg-purple-500' },
     { label: 'Corporate Recurring', value: r.corporate_recurring, color: 'bg-blue-500' },
-    { label: 'Dead Hours', value: r.dead_hours, color: 'bg-red-500' },
+    { label: 'Dead Hours', value: r.dead_hours, color: 'bg-seat-red' },
     { label: 'Birthdays', value: r.birthdays, color: 'bg-pink-500' },
     { label: 'Delivery Uplift', value: r.delivery_uplift, color: 'bg-amber-500' },
   ];
@@ -78,36 +83,39 @@ export default function DashboardOverview() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Overview</h1>
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-white tracking-tight">Overview</h1>
+        <p className="text-sm text-zinc-500 mt-1">Your restaurant at a glance</p>
+      </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        <MetricCard title="Total Customers" value={m.total_customers} />
-        <MetricCard title="Review Response" value={`${m.response_rate}%`} />
-        <MetricCard title="Active Leads" value={m.active_leads} />
-        <MetricCard title="Corp Accounts" value={m.corp_accounts} />
-        <MetricCard title="Dead Hours Filled" value={m.dead_hours_filled} subtitle="This month" />
-        <MetricCard title="Upcoming Birthdays" value={m.upcoming_birthdays} subtitle="Next 30 days" />
+        <MetricCard title="Total Customers" value={m.total_customers} icon={<Users size={16} />} />
+        <MetricCard title="Review Response" value={`${m.response_rate}%`} icon={<MessageSquare size={16} />} />
+        <MetricCard title="Active Leads" value={m.active_leads} icon={<Target size={16} />} />
+        <MetricCard title="Corp Accounts" value={m.corp_accounts} icon={<Building2 size={16} />} />
+        <MetricCard title="Dead Hours Filled" value={m.dead_hours_filled} subtitle="This month" icon={<Clock size={16} />} />
+        <MetricCard title="Upcoming Birthdays" value={m.upcoming_birthdays} subtitle="Next 30 days" icon={<Cake size={16} />} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Revenue Attribution */}
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Revenue Attribution</h2>
-            <span className="text-2xl font-bold text-accent-amber">{formatCurrency(r.total)}</span>
+        <div className="bg-seat-card border border-seat-border rounded-xl p-6">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-sm font-semibold text-white uppercase tracking-wider">Revenue Attribution</h2>
+            <span className="text-2xl font-bold text-seat-red tracking-tight">{formatCurrency(r.total)}</span>
           </div>
-          <p className="text-xs text-slate-500 mb-4">SeatSignals-attributed revenue this month</p>
-          <div className="space-y-3">
+          <p className="text-xs text-zinc-600 mb-5">SeatSignals-attributed revenue this month</p>
+          <div className="space-y-4">
             {revenueBreakdown.map((b) => (
               <div key={b.label}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-300">{b.label}</span>
-                  <span className="text-white font-medium">{formatCurrency(b.value)}</span>
+                <div className="flex justify-between text-sm mb-1.5">
+                  <span className="text-zinc-400">{b.label}</span>
+                  <span className="text-white font-medium tabular-nums">{formatCurrency(b.value)}</span>
                 </div>
-                <div className="h-2 bg-navy-700 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                   <div
-                    className={`h-full ${b.color} rounded-full transition-all`}
+                    className={`h-full ${b.color} rounded-full`}
                     style={{ width: `${(b.value / maxRevenue) * 100}%` }}
                   />
                 </div>
@@ -117,20 +125,25 @@ export default function DashboardOverview() {
         </div>
 
         {/* Activity Feed */}
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Activity Feed</h2>
+        <div className="bg-seat-card border border-seat-border rounded-xl p-6">
+          <h2 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">Activity Feed</h2>
           {activities.length === 0 ? (
-            <p className="text-slate-500 text-sm">
-              No activity yet. Complete your setup to start seeing events across all seven pillars.
-            </p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center mb-3">
+                <Clock size={18} className="text-zinc-500" />
+              </div>
+              <p className="text-zinc-500 text-sm">
+                No activity yet. Complete your setup to start seeing events.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            <div className="space-y-1 max-h-[400px] overflow-y-auto">
               {activities.map((a, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${TYPE_ICONS[a.type]?.split(' ')[0] || 'bg-slate-500'}`} />
+                <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-zinc-800/40">
+                  <div className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${TYPE_DOT_COLORS[a.type] || 'bg-zinc-600'}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-300 truncate">{a.text}</p>
-                    <p className="text-xs text-slate-500">{formatDate(a.time)}</p>
+                    <p className="text-sm text-zinc-300 leading-snug">{a.text}</p>
+                    <p className="text-xs text-zinc-600 mt-0.5">{formatDate(a.time)}</p>
                   </div>
                 </div>
               ))}

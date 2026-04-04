@@ -11,16 +11,17 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        navy: {
-          900: "#0F1729",
-          800: "#1A2332",
-          700: "#243044",
-          600: "#2E3D56",
+        seat: {
+          black: '#09090B',
+          dark: '#18181B',
+          card: '#1C1C21',
+          border: '#27272A',
+          red: '#E11D48',
+          'red-dark': '#BE123C',
         },
-        accent: {
-          blue: "#3B82F6",
-          amber: "#F59E0B",
-        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
     },
   },

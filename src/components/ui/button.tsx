@@ -12,17 +12,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-accent-blue focus:ring-offset-2 focus:ring-offset-navy-900 disabled:opacity-50 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-seat-red focus-visible:ring-offset-2 focus-visible:ring-offset-seat-black disabled:opacity-50 disabled:cursor-not-allowed',
           {
-            'bg-accent-blue text-white hover:bg-blue-600': variant === 'primary',
-            'bg-navy-700 text-slate-200 hover:bg-navy-600 border border-navy-600': variant === 'secondary',
-            'text-slate-400 hover:text-white hover:bg-navy-700': variant === 'ghost',
-            'bg-accent-amber text-navy-900 font-bold hover:bg-yellow-400': variant === 'cta',
+            'bg-seat-red text-white hover:bg-seat-red-dark active:bg-rose-800 rounded-lg shadow-sm': variant === 'primary',
+            'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white border border-zinc-700 rounded-lg': variant === 'secondary',
+            'text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg': variant === 'ghost',
+            'bg-seat-red text-white font-semibold hover:bg-seat-red-dark active:bg-rose-800 rounded-lg shadow-sm': variant === 'cta',
           },
           {
-            'px-3 py-1.5 text-sm': size === 'sm',
-            'px-4 py-2 text-sm': size === 'md',
-            'px-6 py-3 text-base': size === 'lg',
+            'h-8 px-3 text-xs gap-1.5': size === 'sm',
+            'h-9 px-4 text-sm gap-2': size === 'md',
+            'h-10 px-5 text-sm gap-2': size === 'lg',
           },
           className
         )}

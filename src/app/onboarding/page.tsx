@@ -74,29 +74,29 @@ export default function OnboardingPage() {
   const totalSteps = 3;
 
   return (
-    <div className="min-h-screen bg-navy-900 flex items-center justify-center p-4">
-      <Toaster position="top-right" toastOptions={{ style: { background: '#1A2332', color: '#E2E8F0', border: '1px solid #243044' } }} />
+    <div className="min-h-screen bg-[#09090B] flex items-center justify-center p-4">
+      <Toaster position="top-right" toastOptions={{ style: { background: '#18181B', color: '#FAFAFA', border: '1px solid #27272A' } }} />
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white">
-            Seat<span className="text-accent-blue">Signals</span>
+            Seat<span className="text-red-500">Signals</span>
           </h1>
-          <p className="text-slate-400 mt-2">Let&apos;s set up your restaurant</p>
+          <p className="text-zinc-500 mt-2">Restaurant Revenue Operating System</p>
         </div>
 
-        {/* Progress bar */}
-        <div className="flex gap-2 mb-8">
+        {/* Progress dots */}
+        <div className="flex justify-center gap-3 mb-8">
           {Array.from({ length: totalSteps }).map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < step ? 'bg-accent-blue' : 'bg-navy-700'
+              className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                i < step ? 'bg-red-500' : 'bg-zinc-800'
               }`}
             />
           ))}
         </div>
 
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-white mb-4">Restaurant Details</h2>
@@ -113,11 +113,11 @@ export default function OnboardingPage() {
                 onChange={(e) => setAddress(e.target.value)}
               />
               <div className="space-y-1">
-                <label className="block text-sm text-slate-300">Cuisine Type</label>
+                <label className="block text-sm text-zinc-300">Cuisine Type</label>
                 <select
                   value={cuisineType}
                   onChange={(e) => setCuisineType(e.target.value)}
-                  className="w-full bg-navy-700 border border-navy-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="">Select cuisine type</option>
                   {CUISINE_TYPES.map((c) => (
@@ -126,15 +126,15 @@ export default function OnboardingPage() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="block text-sm text-slate-300">Brand Voice</label>
+                <label className="block text-sm text-zinc-300">Brand Voice</label>
                 <textarea
                   placeholder="e.g. Laid-back BBQ spot, keep it casual and friendly. We call everyone 'friend' and love a good pun."
                   value={brandVoice}
                   onChange={(e) => setBrandVoice(e.target.value)}
                   rows={3}
-                  className="w-full bg-navy-700 border border-navy-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
-                <p className="text-xs text-slate-500">This shapes how AI writes your review responses and outreach emails.</p>
+                <p className="text-xs text-zinc-500">This shapes how AI writes your review responses and outreach emails.</p>
               </div>
               <Button
                 variant="cta"
@@ -150,7 +150,7 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-white mb-2">Dead Hours</h2>
-              <p className="text-sm text-slate-400 mb-4">
+              <p className="text-sm text-zinc-400 mb-4">
                 When are your slowest times? We&apos;ll automatically run promotions to fill these windows.
               </p>
 
@@ -158,7 +158,7 @@ export default function OnboardingPage() {
                 <select
                   value={dhDay}
                   onChange={(e) => setDhDay(e.target.value)}
-                  className="bg-navy-700 border border-navy-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                  className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   {DAYS.map((d) => (
                     <option key={d} value={d}>{d}</option>
@@ -170,7 +170,7 @@ export default function OnboardingPage() {
                   onChange={(e) => setDhStart(e.target.value)}
                   className="flex-1"
                 />
-                <span className="text-slate-400 self-center">to</span>
+                <span className="text-zinc-400 self-center">to</span>
                 <Input
                   type="time"
                   value={dhEnd}
@@ -183,8 +183,8 @@ export default function OnboardingPage() {
               {deadHours.length > 0 && (
                 <div className="space-y-2 mt-4">
                   {deadHours.map((dh, i) => (
-                    <div key={i} className="flex items-center justify-between bg-navy-700 rounded-lg px-4 py-2">
-                      <span className="text-sm text-slate-300">
+                    <div key={i} className="flex items-center justify-between bg-zinc-800 rounded-lg px-4 py-2">
+                      <span className="text-sm text-zinc-300">
                         {dh.day} {dh.start} - {dh.end}
                       </span>
                       <button
@@ -211,23 +211,23 @@ export default function OnboardingPage() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-white mb-2">Review Your Setup</h2>
               <div className="space-y-3">
-                <div className="bg-navy-700 rounded-lg p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Restaurant</p>
+                <div className="bg-zinc-800 rounded-lg p-4">
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Restaurant</p>
                   <p className="text-white font-medium">{name}</p>
-                  <p className="text-sm text-slate-400">{address}</p>
-                  <p className="text-sm text-slate-400">{cuisineType}</p>
+                  <p className="text-sm text-zinc-400">{address}</p>
+                  <p className="text-sm text-zinc-400">{cuisineType}</p>
                 </div>
                 {brandVoice && (
-                  <div className="bg-navy-700 rounded-lg p-4">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider">Brand Voice</p>
-                    <p className="text-sm text-slate-300">{brandVoice}</p>
+                  <div className="bg-zinc-800 rounded-lg p-4">
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider">Brand Voice</p>
+                    <p className="text-sm text-zinc-300">{brandVoice}</p>
                   </div>
                 )}
                 {deadHours.length > 0 && (
-                  <div className="bg-navy-700 rounded-lg p-4">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Dead Hours</p>
+                  <div className="bg-zinc-800 rounded-lg p-4">
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Dead Hours</p>
                     {deadHours.map((dh, i) => (
-                      <p key={i} className="text-sm text-slate-300">
+                      <p key={i} className="text-sm text-zinc-300">
                         {dh.day}: {dh.start} - {dh.end}
                       </p>
                     ))}

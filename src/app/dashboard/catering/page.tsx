@@ -21,12 +21,12 @@ interface Lead {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  discovered: 'bg-slate-500/10 text-slate-400',
+  discovered: 'bg-zinc-500/10 text-zinc-400',
   contacted: 'bg-blue-500/10 text-blue-400',
   replied: 'bg-purple-500/10 text-purple-400',
-  meeting: 'bg-amber-500/10 text-amber-400',
+  meeting: 'bg-red-500/10 text-red-400',
   order_placed: 'bg-emerald-500/10 text-emerald-400',
-  recurring: 'bg-accent-blue/10 text-accent-blue',
+  recurring: 'bg-red-500/10 text-red-500',
 };
 
 export default function CateringPage() {
@@ -131,18 +131,18 @@ export default function CateringPage() {
       {/* Convert modal */}
       {convertId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-navy-800 border border-navy-700 rounded-xl p-6 w-full max-w-md">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold text-white mb-4">Convert Lead to Order</h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-1">Order Amount</label>
+                <label className="block text-sm text-zinc-300 mb-1">Order Amount</label>
                 <input
                   type="number"
                   step="0.01"
                   placeholder="500.00"
                   value={convertAmount}
                   onChange={(e) => setConvertAmount(e.target.value)}
-                  className="w-full bg-navy-700 border border-navy-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
               <div className="flex gap-2">
@@ -154,30 +154,30 @@ export default function CateringPage() {
         </div>
       )}
 
-      <div className="bg-navy-800 border border-navy-700 rounded-xl overflow-hidden">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-slate-400">Loading pipeline...</div>
+          <div className="p-8 text-center text-zinc-400">Loading pipeline...</div>
         ) : leads.length === 0 ? (
-          <div className="p-8 text-center text-slate-400">
+          <div className="p-8 text-center text-zinc-400">
             No leads yet. Click Discover to find nearby offices.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-navy-700">
+                <tr className="border-b border-zinc-800">
                   <th className="p-4 w-10"></th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Company</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Contact</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Size</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Distance</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Status</th>
-                  <th className="text-left p-4 text-slate-400 font-medium">Actions</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Company</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Contact</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Size</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Distance</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Status</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((lead) => (
-                  <tr key={lead.lead_id} className="border-b border-navy-700/50 hover:bg-navy-700/30">
+                  <tr key={lead.lead_id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
                     <td className="p-4">
                       {lead.sequence_status === 'discovered' && (
                         <input
@@ -192,13 +192,13 @@ export default function CateringPage() {
                       <p className="text-white font-medium">{lead.company_name}</p>
                     </td>
                     <td className="p-4">
-                      <p className="text-slate-300">{lead.contact_name}</p>
-                      <p className="text-xs text-slate-500">{lead.contact_email}</p>
+                      <p className="text-zinc-300">{lead.contact_name}</p>
+                      <p className="text-xs text-zinc-500">{lead.contact_email}</p>
                     </td>
-                    <td className="p-4 text-slate-300">{lead.company_size} employees</td>
-                    <td className="p-4 text-slate-300">{lead.distance_miles} mi</td>
+                    <td className="p-4 text-zinc-300">{lead.company_size} employees</td>
+                    <td className="p-4 text-zinc-300">{lead.distance_miles} mi</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${STATUS_COLORS[lead.sequence_status] || 'text-slate-400'}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${STATUS_COLORS[lead.sequence_status] || 'text-zinc-400'}`}>
                         {lead.sequence_status.replace('_', ' ')}
                       </span>
                     </td>

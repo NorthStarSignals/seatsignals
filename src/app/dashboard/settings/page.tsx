@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useRestaurant } from '@/hooks/use-restaurant';
 import { PLANS } from '@/lib/stripe';
 import toast from 'react-hot-toast';
-import { Download, QrCode, CreditCard, Zap, Pencil } from 'lucide-react';
+import {
+  Download, QrCode, CreditCard, Zap, Pencil,
+  Truck, Monitor, Mail, Star, Wifi, Copy, ExternalLink,
+  ChevronDown, ChevronUp,
+} from 'lucide-react';
 
 interface IntegrationConfig {
   id: string;
@@ -14,14 +18,76 @@ interface IntegrationConfig {
   config: Record<string, string>;
 }
 
-const INTEGRATIONS = [
-  { name: 'Google Business Profile', provider: 'google_business', desc: 'Auto-monitor and respond to reviews' },
+interface IntegrationDef {
+  name: string;
+  provider: string;
+  desc: string;
+}
+
+interface IntegrationSection {
+  title: string;
+  icon: React.ReactNode;
+  integrations: IntegrationDef[];
+}
+
+const INTEGRATION_SECTIONS: IntegrationSection[] = [
+  {
+    title: 'Delivery Platforms',
+    icon: <Truck size={18} className="text-accent-blue" />,
+    integrations: [
+      { name: 'DoorDash', provider: 'doordash', desc: 'Sync orders, revenue, and ratings from DoorDash' },
+      { name: 'Uber Eats', provider: 'uber_eats', desc: 'Sync orders, revenue, and ratings from Uber Eats' },
+      { name: 'Grubhub', provider: 'grubhub', desc: 'Sync orders, revenue, and ratings from Grubhub' },
+      { name: 'Postmates', provider: 'postmates', desc: 'Sync orders and revenue from Postmates' },
+      { name: 'Caviar', provider: 'caviar', desc: 'Sync orders and revenue from Caviar' },
+      { name: 'ChowNow', provider: 'chownow', desc: 'Sync orders from your ChowNow storefront' },
+      { name: 'Toast Takeout', provider: 'toast_takeout', desc: 'Sync delivery orders from Toast Takeout' },
+      { name: 'Olo', provider: 'olo', desc: 'Sync orders from your Olo dispatch channels' },
+    ],
+  },
+  {
+    title: 'POS Systems',
+    icon: <Monitor size={18} className="text-accent-blue" />,
+    integrations: [
+      { name: 'Toast POS', provider: 'toast_pos', desc: 'Sync sales, menu items, and labor data' },
+      { name: 'Square', provider: 'square', desc: 'Sync transactions, items, and customer data' },
+      { name: 'Clover', provider: 'clover', desc: 'Sync orders, payments, and inventory' },
+      { name: 'Lightspeed', provider: 'lightspeed', desc: 'Sync sales, inventory, and reporting data' },
+      { name: 'Revel', provider: 'revel', desc: 'Sync POS data and reporting from Revel' },
+      { name: 'Aloha (NCR)', provider: 'aloha_ncr', desc: 'Sync sales and labor data from Aloha POS' },
+    ],
+  },
+  {
+    title: 'CRM & Marketing',
+    icon: <Mail size={18} className="text-accent-blue" />,
+    integrations: [
+      { name: 'Klaviyo', provider: 'klaviyo', desc: 'Sync customer data for email & SMS campaigns' },
+      { name: 'HubSpot', provider: 'hubspot', desc: 'Sync contacts and deals to your CRM' },
+      { name: 'Mailchimp', provider: 'mailchimp', desc: 'Sync customer emails for marketing campaigns' },
+    ],
+  },
+  {
+    title: 'Reviews',
+    icon: <Star size={18} className="text-accent-blue" />,
+    integrations: [
+      { name: 'Google Business Profile', provider: 'google_business', desc: 'Auto-monitor and respond to Google reviews' },
+      { name: 'Yelp', provider: 'yelp', desc: 'Monitor and respond to Yelp reviews' },
+      { name: 'TripAdvisor', provider: 'tripadvisor', desc: 'Monitor TripAdvisor reviews and ratings' },
+    ],
+  },
+  {
+    title: 'WiFi & Analytics',
+    icon: <Wifi size={18} className="text-accent-blue" />,
+    integrations: [
+      { name: 'WiFi Analytics', provider: 'wifi_analytics', desc: 'Power your capture form — collect customer data via WiFi login' },
+    ],
+  },
 ];
 
 export default function SettingsPage() {
   const { restaurant, loading, mutate } = useRestaurant();
   const [qrSvg, setQrSvg] = useState('');
-  const [qrUrl, setQrUrl] = useState('');
+  const [captureUrl, setCaptureUrl] = useState('');
   const [testMode, setTestMode] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -30,6 +96,7 @@ export default function SettingsPage() {
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [savingIntegration, setSavingIntegration] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   const fetchIntegrations = useCallback(async () => {
     try {
@@ -45,6 +112,9 @@ export default function SettingsPage() {
 
   const isConnected = (provider: string) =>
     connectedIntegrations.some(i => i.provider === provider && i.status === 'connected');
+
+  const connectedCount = (providers: string[]) =>
+    providers.filter(p => isConnected(p)).length;
 
   const handleConnect = async (provider: string) => {
     if (!apiKey.trim()) { toast.error('Please enter an API key'); return; }
@@ -133,7 +203,7 @@ export default function SettingsPage() {
     if (res.ok) {
       const data = await res.json();
       setQrSvg(data.svg);
-      setQrUrl(data.url);
+      setCaptureUrl(data.url);
     }
   };
 
@@ -157,7 +227,18 @@ export default function SettingsPage() {
     }
   };
 
+  const toggleSection = (title: string) => {
+    setCollapsedSections(prev => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
+  };
+
   if (loading) return <div className="text-slate-400">Loading settings...</div>;
+
+  const totalConnected = connectedIntegrations.filter(i => i.status === 'connected').length;
 
   return (
     <div>
@@ -235,104 +316,187 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* Table Tents / QR Codes */}
+        {/* WiFi Capture Setup */}
         <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <QrCode size={20} className="text-accent-blue" />
-            <h2 className="text-lg font-semibold text-white">Table Tents - QR Codes</h2>
+            <Wifi size={20} className="text-accent-blue" />
+            <h2 className="text-lg font-semibold text-white">WiFi Capture Setup</h2>
           </div>
-          {qrSvg ? (
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="bg-white p-4 rounded-lg" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-              <div className="flex-1">
-                <p className="text-sm text-slate-300 mb-2">
-                  Print this QR code on table tents. When customers scan it, they&apos;ll see your WiFi capture page.
-                </p>
-                <p className="text-xs text-slate-500 mb-4 font-mono break-all">{qrUrl}</p>
-                <p className="text-sm text-slate-400 mb-4">
-                  &quot;Scan for free WiFi + 10% off your next visit.&quot;
-                </p>
-                <Button variant="cta" size="sm" onClick={() => {
-                  const w = window.open('', '_blank');
-                  if (w) {
-                    w.document.write(`
-                      <html><head><title>SeatSignals QR Codes</title>
-                      <style>body{margin:0;padding:20px;font-family:sans-serif}
-                      .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;margin:0 auto}
-                      .card{border:2px solid #ccc;border-radius:12px;padding:20px;text-align:center}
-                      .card h3{margin:0 0 10px;font-size:18px}
-                      .card p{margin:5px 0;color:#666;font-size:14px}
-                      svg{width:150px;height:150px}
-                      @media print{.grid{gap:10px}.card{border:1px solid #999}}</style></head>
-                      <body><div class="grid">
-                      ${[1,2,3,4].map(() => `<div class="card"><h3>${restaurant?.name || 'Restaurant'}</h3>${qrSvg}<p>Scan for free WiFi + 10% off your next visit</p></div>`).join('')}
-                      </div></body></html>
-                    `);
-                    w.document.close();
-                    w.print();
-                  }
-                }}>
-                  <Download size={16} className="mr-1" /> Print Table Tents (4 per page)
-                </Button>
+          {restaurant ? (
+            <div className="space-y-5">
+              <p className="text-sm text-slate-300">
+                Share this link or print QR codes for table tents to capture customer data. When guests scan the QR code or visit the link, they&apos;ll see your branded WiFi capture page where they can opt in for offers.
+              </p>
+
+              {/* Capture URL */}
+              <div>
+                <label className="text-[10px] font-medium uppercase tracking-wider text-slate-500 mb-2 block">Capture Form URL</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-navy-700 border border-navy-600 rounded-lg px-4 py-2.5 text-sm text-slate-300 font-mono break-all">
+                    {captureUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/capture/${restaurant.restaurant_id}`}
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => copyToClipboard(captureUrl || `${window.location.origin}/capture/${restaurant.restaurant_id}`)}
+                  >
+                    <Copy size={14} className="mr-1" /> Copy Link
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => window.open(captureUrl || `/capture/${restaurant.restaurant_id}`, '_blank')}
+                  >
+                    <ExternalLink size={14} className="mr-1" /> Preview
+                  </Button>
+                </div>
+              </div>
+
+              {/* QR Code + Print */}
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                {qrSvg ? (
+                  <div className="bg-white p-4 rounded-lg" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+                ) : (
+                  <div className="w-[150px] h-[150px] bg-navy-700 rounded-lg flex items-center justify-center">
+                    <QrCode size={40} className="text-slate-600" />
+                  </div>
+                )}
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-white mb-1">Table Tent Message</p>
+                    <p className="text-sm text-slate-400">
+                      &quot;Scan for free WiFi + 10% off your next visit.&quot;
+                    </p>
+                  </div>
+                  <Button variant="cta" size="sm" onClick={() => {
+                    const w = window.open('', '_blank');
+                    if (w) {
+                      w.document.write(`
+                        <html><head><title>SeatSignals QR Codes</title>
+                        <style>body{margin:0;padding:20px;font-family:sans-serif}
+                        .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;margin:0 auto}
+                        .card{border:2px solid #ccc;border-radius:12px;padding:20px;text-align:center}
+                        .card h3{margin:0 0 10px;font-size:18px}
+                        .card p{margin:5px 0;color:#666;font-size:14px}
+                        svg{width:150px;height:150px}
+                        @media print{.grid{gap:10px}.card{border:1px solid #999}}</style></head>
+                        <body><div class="grid">
+                        ${[1,2,3,4].map(() => `<div class="card"><h3>${restaurant?.name || 'Restaurant'}</h3>${qrSvg}<p>Scan for free WiFi + 10% off your next visit</p></div>`).join('')}
+                        </div></body></html>
+                      `);
+                      w.document.close();
+                      w.print();
+                    }
+                  }}>
+                    <Download size={16} className="mr-1" /> Print Table Tents (4 per page)
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
-            <p className="text-slate-400 text-sm">Complete onboarding to generate your QR code.</p>
+            <p className="text-slate-400 text-sm">Complete onboarding to set up WiFi capture.</p>
           )}
         </div>
 
         {/* Integrations */}
         <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <Zap size={20} className="text-accent-blue" />
             <h2 className="text-lg font-semibold text-white">Integrations</h2>
+            {totalConnected > 0 && (
+              <span className="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-0.5 rounded-full ml-2">
+                {totalConnected} connected
+              </span>
+            )}
           </div>
-          <div className="space-y-4">
-            {INTEGRATIONS.map((integration) => {
-              const connected = isConnected(integration.provider);
-              const isExpanded = connectingProvider === integration.provider;
+          <p className="text-sm text-slate-400 mb-5">Connect your platforms to automatically sync data into SeatSignals.</p>
+
+          <div className="space-y-6">
+            {INTEGRATION_SECTIONS.map((section) => {
+              const sectionProviders = section.integrations.map(i => i.provider);
+              const sectionConnected = connectedCount(sectionProviders);
+              const isCollapsed = collapsedSections[section.title] ?? false;
+
               return (
-                <div key={integration.provider} className="p-4 bg-navy-700 rounded-lg">
-                  <div className="flex items-center justify-between">
+                <div key={section.title}>
+                  <button
+                    onClick={() => toggleSection(section.title)}
+                    className="flex items-center justify-between w-full mb-3 group"
+                  >
                     <div className="flex items-center gap-2">
-                      <div>
-                        <p className="text-white font-medium">{integration.name}</p>
-                        <p className="text-xs text-slate-400">{integration.desc}</p>
-                      </div>
-                      {connected && (
-                        <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full">Connected</span>
+                      {section.icon}
+                      <h3 className="text-sm font-semibold text-white uppercase tracking-wider">{section.title}</h3>
+                      {sectionConnected > 0 && (
+                        <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full">
+                          {sectionConnected}/{section.integrations.length}
+                        </span>
                       )}
                     </div>
-                    {connected ? (
-                      <Button variant="secondary" size="sm" onClick={() => handleDisconnect(integration.provider)}>Disconnect</Button>
+                    {isCollapsed ? (
+                      <ChevronDown size={16} className="text-slate-500 group-hover:text-white transition-colors" />
                     ) : (
-                      <Button variant="secondary" size="sm" onClick={() => { setConnectingProvider(isExpanded ? null : integration.provider); setApiKey(''); }}>
-                        {isExpanded ? 'Cancel' : 'Connect'}
-                      </Button>
+                      <ChevronUp size={16} className="text-slate-500 group-hover:text-white transition-colors" />
                     )}
-                  </div>
-                  {isExpanded && !connected && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <input
-                        type="password"
-                        placeholder="Enter your API key"
-                        value={apiKey}
-                        onChange={e => setApiKey(e.target.value)}
-                        className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full"
-                      />
-                      <Button variant="cta" size="sm" onClick={() => handleConnect(integration.provider)} disabled={savingIntegration}>
-                        {savingIntegration ? 'Saving...' : 'Save'}
-                      </Button>
-                      <Button variant="secondary" size="sm" onClick={() => { setConnectingProvider(null); setApiKey(''); }}>Cancel</Button>
+                  </button>
+
+                  {!isCollapsed && (
+                    <div className="space-y-2">
+                      {section.integrations.map((integration) => {
+                        const connected = isConnected(integration.provider);
+                        const isExpanded = connectingProvider === integration.provider;
+                        return (
+                          <div key={integration.provider} className="p-4 bg-navy-700 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-white font-medium text-sm">{integration.name}</p>
+                                    {connected && (
+                                      <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full flex-shrink-0">Connected</span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-slate-400 mt-0.5">{integration.desc}</p>
+                                </div>
+                              </div>
+                              <div className="flex-shrink-0 ml-4">
+                                {connected ? (
+                                  <Button variant="secondary" size="sm" onClick={() => handleDisconnect(integration.provider)}>Disconnect</Button>
+                                ) : (
+                                  <Button variant="secondary" size="sm" onClick={() => { setConnectingProvider(isExpanded ? null : integration.provider); setApiKey(''); }}>
+                                    {isExpanded ? 'Cancel' : 'Connect'}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            {isExpanded && !connected && (
+                              <div className="mt-3 flex items-center gap-2">
+                                <input
+                                  type="password"
+                                  placeholder="Enter your API key"
+                                  value={apiKey}
+                                  onChange={e => setApiKey(e.target.value)}
+                                  className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full"
+                                />
+                                <Button variant="cta" size="sm" onClick={() => handleConnect(integration.provider)} disabled={savingIntegration}>
+                                  {savingIntegration ? 'Saving...' : 'Save'}
+                                </Button>
+                                <Button variant="secondary" size="sm" onClick={() => { setConnectingProvider(null); setApiKey(''); }}>Cancel</Button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               );
             })}
+
+            {/* Test Mode Toggle */}
             <div className="flex items-center justify-between p-4 bg-navy-700 rounded-lg">
               <div>
                 <p className="text-white font-medium">Test Mode</p>
-                <p className="text-xs text-slate-400">Simulate reviews without Google connection</p>
+                <p className="text-xs text-slate-400">Use demo data when platforms aren&apos;t connected yet</p>
               </div>
               <button
                 onClick={() => { const next = !testMode; setTestMode(next); toast.success('Test mode ' + (next ? 'enabled' : 'disabled')); }}

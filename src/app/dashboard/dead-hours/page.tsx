@@ -88,7 +88,7 @@ export default function DeadHoursPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Dead Hours Engine</h1>
-        <Button variant="secondary" size="sm" onClick={triggerNow} disabled={triggering}>
+        <Button variant="cta" size="sm" onClick={triggerNow} disabled={triggering}>
           {triggering ? 'Triggering...' : 'Trigger Now'}
         </Button>
       </div>
@@ -101,19 +101,19 @@ export default function DeadHoursPage() {
       </div>
 
       {/* Weekly calendar view */}
-      <div className="bg-navy-800 border border-navy-700 rounded-xl p-6 mb-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-white mb-4">Weekly Dead Hours</h2>
         {config.length === 0 ? (
-          <p className="text-slate-400 text-sm">No dead hours configured. Update your settings in the onboarding flow.</p>
+          <p className="text-zinc-400 text-sm">No dead hours configured. Update your settings in the onboarding flow.</p>
         ) : (
           <div className="grid grid-cols-7 gap-2">
             {DAYS.map(day => {
               const windows = config.filter(w => w.day === day);
               return (
-                <div key={day} className="bg-navy-700 rounded-lg p-3 min-h-[100px]">
-                  <p className="text-xs text-slate-400 font-medium mb-2">{day.slice(0, 3)}</p>
+                <div key={day} className="bg-zinc-800 rounded-lg p-3 min-h-[100px]">
+                  <p className="text-xs text-zinc-400 font-medium mb-2">{day.slice(0, 3)}</p>
                   {windows.length === 0 ? (
-                    <p className="text-xs text-slate-600">No windows</p>
+                    <p className="text-xs text-zinc-600">No windows</p>
                   ) : (
                     windows.map((w, i) => (
                       <div key={i} className="bg-red-500/10 text-red-400 rounded px-2 py-1 text-xs mb-1">
@@ -129,7 +129,7 @@ export default function DeadHoursPage() {
       </div>
 
       {/* Redeem code */}
-      <div className="bg-navy-800 border border-navy-700 rounded-xl p-6 mb-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-white mb-4">Redeem Code</h2>
         <form onSubmit={handleRedeem} className="flex flex-wrap gap-3 items-end">
           <Input label="Code" placeholder="DH4X7KMN" value={redeemCode} onChange={e => setRedeemCode(e.target.value)} />
@@ -139,36 +139,36 @@ export default function DeadHoursPage() {
       </div>
 
       {/* Geo-ads placeholder */}
-      <div className="bg-navy-800 border border-navy-700 rounded-xl p-6 mb-6 opacity-60">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6 opacity-60">
         <h2 className="text-lg font-semibold text-white mb-2">Automated Geo-Ads (Coming Soon)</h2>
-        <p className="text-slate-400 text-sm">
+        <p className="text-zinc-400 text-sm">
           Automatically launch geo-targeted Meta ads during dead hours. Set a budget cap per window and the system handles the rest.
         </p>
       </div>
 
       {/* Recent promotions */}
-      <div className="bg-navy-800 border border-navy-700 rounded-xl p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
         <h2 className="text-lg font-semibold text-white mb-4">Recent Promotions</h2>
         {deadHours.length === 0 ? (
-          <p className="text-slate-400 text-sm">No promotions sent yet.</p>
+          <p className="text-zinc-400 text-sm">No promotions sent yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-navy-700">
-                  <th className="text-left p-3 text-slate-400">Window</th>
-                  <th className="text-left p-3 text-slate-400">Code</th>
-                  <th className="text-left p-3 text-slate-400">Status</th>
-                  <th className="text-left p-3 text-slate-400">Revenue</th>
+                <tr className="border-b border-zinc-800">
+                  <th className="text-left p-3 text-zinc-400">Window</th>
+                  <th className="text-left p-3 text-zinc-400">Code</th>
+                  <th className="text-left p-3 text-zinc-400">Status</th>
+                  <th className="text-left p-3 text-zinc-400">Revenue</th>
                 </tr>
               </thead>
               <tbody>
                 {deadHours.slice(0, 20).map(d => (
-                  <tr key={d.dead_hour_id} className="border-b border-navy-700/50">
+                  <tr key={d.dead_hour_id} className="border-b border-zinc-800">
                     <td className="p-3 text-white">{d.day_of_week} {d.time_start}-{d.time_end}</td>
-                    <td className="p-3 text-slate-300 font-mono text-xs">{d.redemption_code}</td>
+                    <td className="p-3 text-zinc-300 font-mono text-xs">{d.redemption_code}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${d.seats_filled > 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${d.seats_filled > 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'}`}>
                         {d.seats_filled > 0 ? 'Redeemed' : 'Sent'}
                       </span>
                     </td>
