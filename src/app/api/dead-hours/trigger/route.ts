@@ -25,6 +25,16 @@ export async function POST() {
   let totalSent = 0;
 
   for (const restaurant of restaurants) {
+    // Check if dead_hours sequence is enabled
+    const { data: seqDef } = await supabase
+      .from('sequence_definitions')
+      .select('enabled')
+      .eq('restaurant_id', restaurant.restaurant_id)
+      .eq('type', 'dead_hours')
+      .single();
+
+    if (seqDef && !seqDef.enabled) continue;
+
     const config = restaurant.dead_hours_config || [];
 
     for (const window of config) {

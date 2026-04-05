@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import {
   Download, QrCode, CreditCard, Zap, Pencil,
   Truck, Monitor, Mail, Star, Wifi, Copy, ExternalLink,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Megaphone, Database,
 } from 'lucide-react';
 
 interface IntegrationConfig {
@@ -82,6 +82,23 @@ const INTEGRATION_SECTIONS: IntegrationSection[] = [
       { name: 'WiFi Analytics', provider: 'wifi_analytics', desc: 'Power your capture form — collect customer data via WiFi login' },
     ],
   },
+  {
+    title: 'Ads & Retargeting',
+    icon: <Megaphone size={18} className="text-red-500" />,
+    integrations: [
+      { name: 'Facebook Ads', provider: 'facebook_ads', desc: 'Sync customer audiences for retargeting campaigns on Facebook' },
+      { name: 'Instagram Ads', provider: 'instagram_ads', desc: 'Retarget captured diners with Instagram ad campaigns' },
+      { name: 'Google Ads', provider: 'google_ads', desc: 'Create custom audiences and run retargeting on Google' },
+      { name: 'TikTok Ads', provider: 'tiktok_ads', desc: 'Reach younger diners with TikTok retargeting campaigns' },
+    ],
+  },
+  {
+    title: 'Data & Intelligence',
+    icon: <Database size={18} className="text-red-500" />,
+    integrations: [
+      { name: 'Apify', provider: 'apify', desc: 'Scrape competitor menus, pricing, and reviews for market intelligence' },
+    ],
+  },
 ];
 
 export default function SettingsPage() {
@@ -97,6 +114,42 @@ export default function SettingsPage() {
   const [apiKey, setApiKey] = useState('');
   const [savingIntegration, setSavingIntegration] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [emailForm, setEmailForm] = useState({ from_name: '', from_email: '' });
+  const [emailConfigExists, setEmailConfigExists] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
+
+  const fetchEmailConfig = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings/email');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.config) {
+          setEmailForm({ from_name: data.config.from_name || '', from_email: data.config.from_email || '' });
+          setEmailConfigExists(true);
+        }
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => { fetchEmailConfig(); }, [fetchEmailConfig]);
+
+  const handleSaveEmail = async () => {
+    setSavingEmail(true);
+    try {
+      const res = await fetch('/api/settings/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from_name: emailForm.from_name, from_email: emailForm.from_email }),
+      });
+      if (res.ok) {
+        toast.success('Email settings saved');
+        setEmailConfigExists(true);
+      } else {
+        toast.error('Failed to save email settings');
+      }
+    } catch { toast.error('Failed to save email settings'); }
+    finally { setSavingEmail(false); }
+  };
 
   const fetchIntegrations = useCallback(async () => {
     try {
@@ -506,6 +559,47 @@ export default function SettingsPage() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Email Sending */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Mail size={20} className="text-red-500" />
+              <h2 className="text-lg font-semibold text-white">Email Sending</h2>
+              {emailConfigExists ? (
+                <span className="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-0.5 rounded-full ml-2">Connected</span>
+              ) : (
+                <span className="bg-zinc-700 text-zinc-400 text-xs px-2.5 py-0.5 rounded-full ml-2">Not configured</span>
+              )}
+            </div>
+          </div>
+          <p className="text-sm text-zinc-400 mb-5">Configure how SeatSignals sends emails on your behalf.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 mb-1.5 block">From Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Sakura Japanese Kitchen"
+                value={emailForm.from_name}
+                onChange={e => setEmailForm({ ...emailForm, from_name: e.target.value })}
+                className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 mb-1.5 block">From Email</label>
+              <input
+                type="email"
+                placeholder="e.g. hello@sakurakitchen.com"
+                value={emailForm.from_email}
+                onChange={e => setEmailForm({ ...emailForm, from_email: e.target.value })}
+                className="bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm px-4 py-2.5 w-full"
+              />
+            </div>
+          </div>
+          <Button variant="cta" size="sm" onClick={handleSaveEmail} disabled={savingEmail}>
+            {savingEmail ? 'Saving...' : 'Save Email Settings'}
+          </Button>
         </div>
 
         {/* Billing */}

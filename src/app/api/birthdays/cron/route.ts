@@ -22,6 +22,16 @@ export async function POST() {
   let processed = 0;
 
   for (const customer of customers) {
+    // Check if birthday sequence is enabled for this restaurant
+    const { data: seqDef } = await supabase
+      .from('sequence_definitions')
+      .select('enabled')
+      .eq('restaurant_id', customer.restaurant_id)
+      .eq('type', 'birthday')
+      .single();
+
+    if (seqDef && !seqDef.enabled) continue;
+
     const { data: restaurant } = await supabase
       .from('restaurants')
       .select('name')

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { MetricCard } from '@/components/ui/metric-card';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
@@ -240,7 +241,14 @@ export default function CustomersPage() {
                       </>
                     ) : (
                       <>
-                        <td className="p-4 text-white">{c.first_name || '--'}</td>
+                        <td className="p-4 text-white">
+                          <Link
+                            href={`/dashboard/customers/${c.customer_id}`}
+                            className="hover:text-red-400 transition-colors"
+                          >
+                            {c.first_name || '--'}
+                          </Link>
+                        </td>
                         <td className="p-4 text-zinc-300">{c.email}</td>
                         <td className="p-4 text-zinc-300">{c.phone || '--'}</td>
                         <td className="p-4 text-zinc-400">{formatDate(c.first_seen)}</td>
@@ -254,6 +262,7 @@ export default function CustomersPage() {
                         <td className="p-4 text-zinc-400">{c.birthday || '--'}</td>
                         <td className="p-4">
                           <div className="flex gap-2">
+                            <Link href={`/dashboard/customers/${c.customer_id}`} className="text-xs text-red-400 hover:underline">View</Link>
                             <button onClick={() => startEdit(c)} className="text-xs text-red-400 hover:underline">Edit</button>
                             <button onClick={() => handleDelete(c.customer_id)} className="text-xs text-red-400 hover:underline">Delete</button>
                           </div>

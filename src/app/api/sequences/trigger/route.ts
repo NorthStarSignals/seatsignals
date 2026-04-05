@@ -5,7 +5,8 @@ import { NextResponse } from 'next/server';
 export async function POST() {
   const supabase = createServerSupabase();
 
-  // Find customers who need sequences triggered
+  // Check if retention sequences are enabled globally
+  // (runs across all restaurants, so check per-restaurant below)
   const now = new Date();
 
   // 1. Thank you SMS - customers captured within the last 2 hours who haven't gotten a thank-you yet
@@ -32,6 +33,16 @@ export async function POST() {
 
       if (existing) continue;
 
+      // Check if retention sequence is enabled for this restaurant
+      const { data: seqDef } = await supabase
+        .from('sequence_definitions')
+        .select('enabled, message_template')
+        .eq('restaurant_id', customer.restaurant_id)
+        .eq('type', 'retention')
+        .single();
+
+      if (seqDef && !seqDef.enabled) continue;
+
       // Get restaurant name
       const { data: restaurant } = await supabase
         .from('restaurants')
@@ -41,7 +52,8 @@ export async function POST() {
 
       if (!restaurant || !customer.phone) continue;
 
-      const message = `Thanks for visiting ${restaurant.name}! Show this text next time for 10% off.`;
+      const template = seqDef?.message_template || 'Thanks for visiting {{restaurant_name}}! Show this text next time for 10% off.';
+      const message = template.replace('{{restaurant_name}}', restaurant.name).replace('{{first_name}}', customer.first_name || 'friend');
       await sendSMS(customer.phone, message);
 
       await supabase.from('sequences').insert({

@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Brain,
+  Zap,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -23,6 +24,7 @@ const mainNav = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Customers', href: '/dashboard/customers', icon: Users },
   { label: 'Reviews', href: '/dashboard/reviews', icon: Star },
+  { label: 'Sequences', href: '/dashboard/sequences', icon: Zap },
 ];
 
 const revenueNav = [

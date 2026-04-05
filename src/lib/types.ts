@@ -147,3 +147,33 @@ export interface BirthdayEvent {
   check_total?: number;
   redemption_code: string;
 }
+
+export interface SequenceDefinition {
+  id: string;
+  restaurant_id: string;
+  type: string;
+  name: string;
+  enabled: boolean;
+  channel: 'sms' | 'email' | 'both';
+  subject?: string;
+  message_template?: string;
+  trigger_event?: string;
+  delay_days: number;
+  created_at: string;
+  // Aggregated stats (computed in API)
+  stats?: {
+    sent: number;
+    opened: number;
+    clicked: number;
+    converted: number;
+  };
+}
+
+export interface RestaurantEmailConfig {
+  id: string;
+  restaurant_id: string;
+  provider: 'sendgrid' | 'smtp' | 'gmail';
+  from_name?: string;
+  from_email?: string;
+  connected: boolean;
+}
