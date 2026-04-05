@@ -1,4 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase';
+import { enrichCustomer } from '@/lib/enrichment';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -61,6 +62,11 @@ export async function POST(request: Request) {
     restaurant_id,
     source: source || 'wifi',
   });
+
+  // Fire-and-forget enrichment (don't await - don't block the capture response)
+  enrichCustomer(customerId).catch(err =>
+    console.error('[Enrichment] Background enrichment failed:', err)
+  );
 
   return NextResponse.json({ success: true, customer_id: customerId });
 }

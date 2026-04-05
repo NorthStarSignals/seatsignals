@@ -34,6 +34,13 @@ export interface Customer {
   birthday?: string;
   source: 'wifi' | 'qr' | 'manual';
   location_data?: Record<string, unknown>;
+  company?: string;
+  job_title?: string;
+  linkedin_url?: string;
+  instagram_handle?: string;
+  twitter_handle?: string;
+  enrichment_data?: Record<string, unknown>;
+  enriched_at?: string;
 }
 
 export interface Visit {

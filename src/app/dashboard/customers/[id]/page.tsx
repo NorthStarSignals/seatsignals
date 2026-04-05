@@ -7,7 +7,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 import { Customer, Visit, Sequence } from '@/lib/types';
-import { ArrowLeft, Mail, Phone, Calendar, Tag, X, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, Tag, X, CheckCircle2, Globe, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // Extended customer type to include fields editable on this page
@@ -68,6 +68,9 @@ export default function CustomerProfilePage() {
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [sending, setSending] = useState(false);
+
+  // Enrichment state
+  const [enriching, setEnriching] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     setLoading(true);
@@ -194,6 +197,27 @@ export default function CustomerProfilePage() {
     setSending(false);
   };
 
+  const triggerEnrichment = async () => {
+    setEnriching(true);
+    try {
+      const res = await fetch('/api/enrich/customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_id: id }),
+      });
+      if (!res.ok) {
+        const e = await res.json();
+        throw new Error(e.error ?? 'Enrichment failed');
+      }
+      toast.success('Enrichment complete');
+      // Reload profile to show updated data
+      await fetchProfile();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Enrichment failed');
+    }
+    setEnriching(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -216,6 +240,7 @@ export default function CustomerProfilePage() {
   const fullName = [customer.first_name, customer.last_name].filter(Boolean).join(' ') || 'Unnamed';
   const daysSinceLast = customer.last_seen ? daysSince(customer.last_seen) : null;
   const totalSpend = typeof customer.total_spend === 'number' ? customer.total_spend : 0;
+  const isEnriched = Boolean(customer.enriched_at);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -268,8 +293,16 @@ export default function CustomerProfilePage() {
               </div>
             ) : (
               <>
-                <h1 className="text-2xl font-bold text-white mb-2">{fullName}</h1>
-                <div className="flex flex-wrap gap-4 text-sm text-zinc-400">
+                <h1 className="text-2xl font-bold text-white mb-1">{fullName}</h1>
+
+                {/* Company / Job Title from enrichment */}
+                {(customer.company || customer.job_title) && (
+                  <p className="text-sm text-zinc-400 mb-2">
+                    {[customer.job_title, customer.company].filter(Boolean).join(' at ')}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-4 text-sm text-zinc-400 mb-2">
                   {customer.email && (
                     <span className="flex items-center gap-1.5">
                       <Mail size={13} />
@@ -289,6 +322,48 @@ export default function CustomerProfilePage() {
                     </span>
                   )}
                 </div>
+
+                {/* Social links from enrichment */}
+                {(customer.linkedin_url || customer.instagram_handle || customer.twitter_handle) && (
+                  <div className="flex items-center gap-3 mb-2">
+                    {customer.linkedin_url && (
+                      <a
+                        href={customer.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-zinc-400 hover:text-blue-400 transition-colors"
+                        title="LinkedIn Profile"
+                      >
+                        <Globe size={14} />
+                        LinkedIn
+                      </a>
+                    )}
+                    {customer.instagram_handle && (
+                      <a
+                        href={`https://instagram.com/${customer.instagram_handle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-zinc-400 hover:text-pink-400 transition-colors"
+                        title="Instagram Profile"
+                      >
+                        <Globe size={14} />
+                        @{customer.instagram_handle}
+                      </a>
+                    )}
+                    {customer.twitter_handle && (
+                      <a
+                        href={`https://x.com/${customer.twitter_handle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-zinc-400 hover:text-sky-400 transition-colors"
+                        title="X / Twitter Profile"
+                      >
+                        <Globe size={14} />
+                        @{customer.twitter_handle}
+                      </a>
+                    )}
+                  </div>
+                )}
               </>
             )}
 
@@ -343,18 +418,132 @@ export default function CustomerProfilePage() {
             </div>
           </div>
 
-          {/* Edit / Save buttons */}
-          <div className="flex gap-2 flex-shrink-0">
+          {/* Edit / Save / Re-enrich buttons */}
+          <div className="flex gap-2 flex-shrink-0 flex-wrap">
             {editing ? (
               <>
                 <Button variant="primary" size="sm" onClick={saveEdits}>Save</Button>
                 <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>Cancel</Button>
               </>
             ) : (
-              <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>Edit</Button>
+              <>
+                <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>Edit</Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={triggerEnrichment}
+                  disabled={enriching}
+                  className="flex items-center gap-1.5"
+                >
+                  <Sparkles size={13} />
+                  {enriching ? 'Enriching…' : 'Re-enrich'}
+                </Button>
+              </>
             )}
           </div>
         </div>
+      </div>
+
+      {/* Enrichment status section */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 mb-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-white font-semibold mb-1">Enrichment</h2>
+            {isEnriched && customer.enriched_at ? (
+              <p className="text-xs text-zinc-500">
+                Last enriched: {formatDate(customer.enriched_at)}
+              </p>
+            ) : (
+              <p className="text-xs text-zinc-500">
+                No enrichment data yet. Run enrichment to discover social profiles and company info.
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {isEnriched ? (
+              <span className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 rounded-full px-3 py-1 text-xs font-medium">
+                <CheckCircle2 size={12} />
+                Enriched
+              </span>
+            ) : (
+              <>
+                <span className="bg-zinc-800 text-zinc-500 rounded-full px-3 py-1 text-xs font-medium">
+                  Not Enriched
+                </span>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={triggerEnrichment}
+                  disabled={enriching}
+                  className="flex items-center gap-1.5"
+                >
+                  <Sparkles size={13} />
+                  {enriching ? 'Enriching…' : 'Enrich Now'}
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Show enriched fields summary if enriched */}
+        {isEnriched && (customer.company || customer.job_title || customer.linkedin_url || customer.instagram_handle || customer.twitter_handle) && (
+          <div className="mt-4 pt-4 border-t border-zinc-800 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            {customer.company && (
+              <div>
+                <span className="text-zinc-500 text-xs uppercase tracking-wide">Company</span>
+                <p className="text-zinc-200">{customer.company}</p>
+              </div>
+            )}
+            {customer.job_title && (
+              <div>
+                <span className="text-zinc-500 text-xs uppercase tracking-wide">Job Title</span>
+                <p className="text-zinc-200">{customer.job_title}</p>
+              </div>
+            )}
+            {customer.linkedin_url && (
+              <div>
+                <span className="text-zinc-500 text-xs uppercase tracking-wide">LinkedIn</span>
+                <a
+                  href={customer.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-blue-400 hover:underline text-xs"
+                >
+                  <Globe size={12} />
+                  View Profile
+                </a>
+              </div>
+            )}
+            {customer.instagram_handle && (
+              <div>
+                <span className="text-zinc-500 text-xs uppercase tracking-wide">Instagram</span>
+                <a
+                  href={`https://instagram.com/${customer.instagram_handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-pink-400 hover:underline text-xs"
+                >
+                  <Globe size={12} />
+                  @{customer.instagram_handle}
+                </a>
+              </div>
+            )}
+            {customer.twitter_handle && (
+              <div>
+                <span className="text-zinc-500 text-xs uppercase tracking-wide">X / Twitter</span>
+                <a
+                  href={`https://x.com/${customer.twitter_handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sky-400 hover:underline text-xs"
+                >
+                  <Globe size={12} />
+                  @{customer.twitter_handle}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Metrics row */}
