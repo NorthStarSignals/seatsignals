@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
   // Create a price on the fly (in production, use pre-created Stripe prices)
   const price = await stripe.prices.create({
-    unit_amount: planConfig.price,
+    unit_amount: planConfig.price * 100,
     currency: 'usd',
     recurring: { interval: 'month' },
     product_data: { name: `SeatSignals ${planConfig.name}` },

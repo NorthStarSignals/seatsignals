@@ -12,6 +12,17 @@ export async function POST(request: Request) {
 
   const supabase = createServerSupabase();
 
+  // Validate restaurant exists
+  const { data: restaurant } = await supabase
+    .from('restaurants')
+    .select('restaurant_id')
+    .eq('restaurant_id', restaurant_id)
+    .single();
+
+  if (!restaurant) {
+    return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
+  }
+
   // Check if customer already exists for this restaurant
   const { data: existing } = await supabase
     .from('customers')
@@ -21,6 +32,8 @@ export async function POST(request: Request) {
     .single();
 
   let customerId: string;
+  let isNewCustomer = false;
+  const captureSource = source || 'wifi';
 
   if (existing) {
     // Update existing customer
@@ -33,7 +46,8 @@ export async function POST(request: Request) {
         ...(birthday && { birthday }),
         ...(first_name && { first_name }),
       })
-      .eq('customer_id', existing.customer_id);
+      .eq('customer_id', existing.customer_id)
+      .eq('restaurant_id', restaurant_id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     customerId = existing.customer_id;
@@ -47,26 +61,41 @@ export async function POST(request: Request) {
         email,
         phone: phone || null,
         birthday: birthday || null,
-        source: source || 'wifi',
+        source: captureSource,
       })
       .select('customer_id')
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     customerId = newCustomer.customer_id;
+    isNewCustomer = true;
   }
 
   // Create a visit record
   await supabase.from('visits').insert({
     customer_id: customerId,
     restaurant_id,
-    source: source || 'wifi',
+    source: captureSource,
+    spend_amount: 0,
   });
+
+  // Create notification for QR captures
+  if (captureSource === 'qr') {
+    const displayName = first_name || email;
+    await supabase.from('notifications').insert({
+      restaurant_id,
+      type: 'qr_capture',
+      text: isNewCustomer
+        ? `New customer ${displayName} joined via QR code`
+        : `Returning customer ${displayName} checked in via QR code`,
+      read: false,
+    });
+  }
 
   // Fire-and-forget enrichment (don't await - don't block the capture response)
   enrichCustomer(customerId).catch(err =>
     console.error('[Enrichment] Background enrichment failed:', err)
   );
 
-  return NextResponse.json({ success: true, customer_id: customerId });
+  return NextResponse.json({ success: true, customer_id: customerId, new_customer: isNewCustomer });
 }

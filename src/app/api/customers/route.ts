@@ -134,7 +134,7 @@ export async function DELETE(request: NextRequest) {
 
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const { error } = await supabase.from('customers').delete().eq('customer_id', customer_id);
+  const { error } = await supabase.from('customers').delete().eq('customer_id', customer_id).eq('restaurant_id', restaurant.restaurant_id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }
