@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-reviews?tier=pro",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/sync-reviews?tier=growth",
+      "schedule": "0 5 * * 1"
+    }
+  ]
+}
