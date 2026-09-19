@@ -48,7 +48,7 @@ export async function sendEmail(
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: to }] }],
-        from: { email: 'noreply@seatsignals.com', name: 'SeatSignals' },
+        from: { email: 'noreply@seatsignals.app', name: 'SeatSignals' },
         subject,
         content: [{ type: 'text/html', value: htmlContent }],
       }),

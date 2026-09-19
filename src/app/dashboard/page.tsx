@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Users, MessageSquare, Target, Building2, Clock, Cake, DollarSign, Mail, Smartphone, Zap } from 'lucide-react';
+import Link from 'next/link';
+import { Users, MessageSquare, Target, Building2, Clock, Cake, DollarSign, Mail, Smartphone, Zap, Download, ChevronDown, TrendingUp, TrendingDown, ShoppingBag, Sparkles, ArrowRight } from 'lucide-react';
 
 interface OverviewData {
   metrics: {
@@ -47,16 +48,65 @@ const TYPE_DOT_COLORS: Record<string, string> = {
   anniversary: 'bg-pink-500',
 };
 
+interface PosSummary {
+  has_data: boolean;
+  today: { revenue_cents: number; covers: number; orders: number };
+  week: { revenue_cents: number; covers: number; wow_pct: number | null };
+  totals: { orders: number; revenue_cents: number; tips_cents: number; avg_check_cents: number };
+  daily: Array<{ date: string; cents: number }>;
+}
+
 export default function DashboardOverview() {
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [pos, setPos] = useState<PosSummary | null>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/overview')
       .then(res => res.ok ? res.json() : null)
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
+    fetch('/api/metrics/pos-summary')
+      .then(res => res.ok ? res.json() : null)
+      .then(d => { if (d?.has_data) setPos(d); })
+      .catch(() => {});
   }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  async function handleExport(period: 'weekly' | 'monthly') {
+    setExportOpen(false);
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/reports/export?period=${period}`);
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SeatSignals_${period}_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Silently handle - could add toast here
+    } finally {
+      setExporting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -95,9 +145,38 @@ export default function DashboardOverview() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white tracking-tight">Overview</h1>
-        <p className="text-sm text-zinc-500 mt-1">Your restaurant at a glance</p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-white tracking-tight">Overview</h1>
+          <p className="text-sm text-zinc-500 mt-1">Your restaurant at a glance</p>
+        </div>
+        <div className="relative" ref={exportRef}>
+          <button
+            onClick={() => setExportOpen(!exportOpen)}
+            disabled={exporting}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-seat-card border border-seat-border rounded-lg text-sm text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors disabled:opacity-50"
+          >
+            <Download size={15} />
+            {exporting ? 'Exporting...' : 'Export Report'}
+            <ChevronDown size={14} className={`transition-transform ${exportOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {exportOpen && (
+            <div className="absolute right-0 mt-1 w-56 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 py-1">
+              <button
+                onClick={() => handleExport('weekly')}
+                className="w-full text-left px-4 py-2.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+              >
+                Weekly Report (PDF)
+              </button>
+              <button
+                onClick={() => handleExport('monthly')}
+                className="w-full text-left px-4 py-2.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+              >
+                Monthly Report (PDF)
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Connected Integrations Summary */}
@@ -115,6 +194,136 @@ export default function DashboardOverview() {
                 {name}
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Getting-started checklist — shows only when the workspace is empty */}
+      {!pos && m.total_customers === 0 && (
+        <div className="bg-gradient-to-br from-seat-red/10 via-seat-card to-seat-card border border-seat-red/30 rounded-xl p-6 mb-8">
+          <div className="flex items-start justify-between flex-wrap gap-4 mb-5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-seat-red/20 flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-seat-red" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Welcome to SeatSignals</h2>
+                <p className="text-sm text-zinc-400 mt-1">Get to live data in 4 steps — about 15 minutes total.</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Link
+              href="/dashboard/settings/integrations"
+              className="flex items-center gap-3 p-4 bg-seat-black border border-seat-border hover:border-seat-red rounded-lg transition group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-seat-red/10 flex items-center justify-center text-sm font-bold text-seat-red">1</div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-white">Connect your POS</div>
+                <div className="text-xs text-zinc-500">Square today; Toast/Clover coming</div>
+              </div>
+              <ArrowRight size={14} className="text-zinc-500 group-hover:text-seat-red transition" />
+            </Link>
+            <Link
+              href="/dashboard/reviews"
+              className="flex items-center gap-3 p-4 bg-seat-black border border-seat-border hover:border-seat-red rounded-lg transition group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-seat-red/10 flex items-center justify-center text-sm font-bold text-seat-red">2</div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-white">Import your reviews</div>
+                <div className="text-xs text-zinc-500">Yelp + Google auto-pull</div>
+              </div>
+              <ArrowRight size={14} className="text-zinc-500 group-hover:text-seat-red transition" />
+            </Link>
+            <Link
+              href="/dashboard/settings/integrations"
+              className="flex items-center gap-3 p-4 bg-seat-black border border-seat-border hover:border-seat-red rounded-lg transition group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-seat-red/10 flex items-center justify-center text-sm font-bold text-seat-red">3</div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-white">Connect marketing (Klaviyo / Twilio)</div>
+                <div className="text-xs text-zinc-500">So campaigns can actually fire</div>
+              </div>
+              <ArrowRight size={14} className="text-zinc-500 group-hover:text-seat-red transition" />
+            </Link>
+            <Link
+              href="/dashboard/team"
+              className="flex items-center gap-3 p-4 bg-seat-black border border-seat-border hover:border-seat-red rounded-lg transition group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-seat-red/10 flex items-center justify-center text-sm font-bold text-seat-red">4</div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-white">Invite your team</div>
+                <div className="text-xs text-zinc-500">Managers, servers, ops</div>
+              </div>
+              <ArrowRight size={14} className="text-zinc-500 group-hover:text-seat-red transition" />
+            </Link>
+          </div>
+          <p className="text-[11px] text-zinc-500 mt-4">
+            Want to see what it looks like with data? Run the demo seed from DevTools:{' '}
+            <code className="text-seat-red bg-seat-black px-1.5 py-0.5 rounded">fetch(&apos;/api/demo/seed-full?reset=true&apos;, {'{method:\'POST\'}'})</code>
+          </p>
+        </div>
+      )}
+
+      {/* Real POS data — only renders when Square is connected + synced */}
+      {pos && (
+        <div className="bg-seat-card border border-green-500/20 rounded-xl p-5 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <h2 className="text-sm font-semibold text-white uppercase tracking-wider">Live POS</h2>
+              <span className="text-[10px] text-zinc-500">Last 30 days · {pos.totals.orders.toLocaleString()} orders</span>
+            </div>
+            <span className="text-[10px] font-medium text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">REAL DATA</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard
+              title="Today's Revenue"
+              value={formatCurrency(pos.today.revenue_cents / 100)}
+              subtitle={`${pos.today.orders} orders · ${pos.today.covers} covers`}
+              icon={<DollarSign size={16} />}
+            />
+            <MetricCard
+              title="7-Day Revenue"
+              value={formatCurrency(pos.week.revenue_cents / 100)}
+              subtitle={
+                pos.week.wow_pct != null
+                  ? `${pos.week.wow_pct >= 0 ? '+' : ''}${pos.week.wow_pct}% vs prior week`
+                  : 'Need more data for WoW'
+              }
+              icon={pos.week.wow_pct != null && pos.week.wow_pct >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+            />
+            <MetricCard
+              title="Avg Check"
+              value={formatCurrency(pos.totals.avg_check_cents / 100)}
+              subtitle="30-day average"
+              icon={<ShoppingBag size={16} />}
+            />
+            <MetricCard
+              title="Tips Collected"
+              value={formatCurrency(pos.totals.tips_cents / 100)}
+              subtitle="30-day total"
+              icon={<DollarSign size={16} />}
+            />
+          </div>
+          {/* 14-day sparkline */}
+          <div className="mt-4 flex items-end gap-0.5 h-12">
+            {pos.daily.map((d) => {
+              const max = Math.max(...pos.daily.map(x => x.cents), 1);
+              const pct = (d.cents / max) * 100;
+              return (
+                <div
+                  key={d.date}
+                  className={`flex-1 rounded-t ${d.cents > 0 ? 'bg-green-500/60 hover:bg-green-500' : 'bg-zinc-800'}`}
+                  style={{ height: `${Math.max(pct, 2)}%` }}
+                  title={`${d.date}: ${formatCurrency(d.cents / 100)}`}
+                />
+              );
+            })}
+          </div>
+          <div className="mt-1 flex justify-between text-[9px] text-zinc-600">
+            <span>14 days ago</span>
+            <span>Today</span>
           </div>
         </div>
       )}

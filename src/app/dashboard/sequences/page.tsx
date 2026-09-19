@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 import { Button } from '@/components/ui/button';
 import { SequenceDefinition } from '@/lib/types';
@@ -16,30 +16,25 @@ import {
   Plus,
   X,
   ChevronDown,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { SequenceBuilder } from '@/components/dashboard/sequence-builder';
+import { useCrudList } from '@/hooks/use-local-storage-state';
 
 // ─── Toggle Switch ───────────────────────────────────────────────────────────
 
-function ToggleSwitch({
-  enabled,
-  onChange,
-  disabled,
-}: {
-  enabled: boolean;
-  onChange: (val: boolean) => void;
-  disabled?: boolean;
-}) {
+function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: (val: boolean) => void }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={enabled}
-      disabled={disabled}
       onClick={() => onChange(!enabled)}
       className={cn(
-        'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E11D48] focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B] disabled:opacity-50 disabled:cursor-not-allowed',
+        'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E11D48] focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B]',
         enabled ? 'bg-[#E11D48]' : 'bg-zinc-700'
       )}
     >
@@ -52,8 +47,6 @@ function ToggleSwitch({
     </button>
   );
 }
-
-// ─── Channel Badge ────────────────────────────────────────────────────────────
 
 function ChannelBadge({ channel }: { channel: 'sms' | 'email' | 'both' }) {
   const map = {
@@ -70,8 +63,6 @@ function ChannelBadge({ channel }: { channel: 'sms' | 'email' | 'both' }) {
   );
 }
 
-// ─── Type Badge ───────────────────────────────────────────────────────────────
-
 function TypeBadge({ type }: { type: string }) {
   const label = type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   return (
@@ -80,8 +71,6 @@ function TypeBadge({ type }: { type: string }) {
     </span>
   );
 }
-
-// ─── Funnel Bar ───────────────────────────────────────────────────────────────
 
 function FunnelBar({ stats }: { stats: NonNullable<SequenceDefinition['stats']> }) {
   const total = stats.sent || 1;
@@ -116,30 +105,21 @@ function FunnelBar({ stats }: { stats: NonNullable<SequenceDefinition['stats']> 
   );
 }
 
-// ─── Sequence Card ────────────────────────────────────────────────────────────
-
 function SequenceCard({
   definition,
   onToggle,
+  onEdit,
+  onDelete,
 }: {
   definition: SequenceDefinition;
-  onToggle: (id: string, enabled: boolean) => Promise<void>;
+  onToggle: (id: string, enabled: boolean) => void;
+  onEdit: (def: SequenceDefinition) => void;
+  onDelete: (id: string) => void;
 }) {
-  const [toggling, setToggling] = useState(false);
   const stats = definition.stats ?? { sent: 0, opened: 0, clicked: 0, converted: 0 };
-
-  const handleToggle = async (val: boolean) => {
-    setToggling(true);
-    try {
-      await onToggle(definition.id, val);
-    } finally {
-      setToggling(false);
-    }
-  };
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-4 hover:border-zinc-700 transition-colors">
-      {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1.5 mb-2">
@@ -157,12 +137,27 @@ function SequenceCard({
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => onEdit(definition)}
+            className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+            title="Edit sequence"
+          >
+            <Pencil size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete(definition.id)}
+            className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+            title="Delete sequence"
+          >
+            <Trash2 size={13} />
+          </button>
           <span className="text-[11px] text-zinc-500">{definition.enabled ? 'On' : 'Off'}</span>
-          <ToggleSwitch enabled={definition.enabled} onChange={handleToggle} disabled={toggling} />
+          <ToggleSwitch enabled={definition.enabled} onChange={(v) => onToggle(definition.id, v)} />
         </div>
       </div>
 
-      {/* Stats row */}
       <div className="grid grid-cols-4 gap-2">
         {[
           { label: 'Sent', value: stats.sent, icon: Send, color: 'text-zinc-300' },
@@ -178,16 +173,11 @@ function SequenceCard({
         ))}
       </div>
 
-      {/* Funnel bar */}
       {stats.sent > 0 && <FunnelBar stats={stats} />}
-      {stats.sent === 0 && (
-        <p className="text-[11px] text-zinc-600 text-center py-1">No messages sent yet</p>
-      )}
+      {stats.sent === 0 && <p className="text-[11px] text-zinc-600 text-center py-1">No messages sent yet</p>}
     </div>
   );
 }
-
-// ─── Create Form ──────────────────────────────────────────────────────────────
 
 interface CreateFormData {
   name: string;
@@ -201,11 +191,9 @@ interface CreateFormData {
 function CreateSequenceForm({
   onSubmit,
   onCancel,
-  submitting,
 }: {
-  onSubmit: (data: CreateFormData) => Promise<void>;
+  onSubmit: (data: CreateFormData) => void;
   onCancel: () => void;
-  submitting: boolean;
 }) {
   const [form, setForm] = useState<CreateFormData>({
     name: '',
@@ -216,12 +204,11 @@ function CreateSequenceForm({
     message_template: '',
   });
 
-  const set = (key: keyof CreateFormData, value: string) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const set = (key: keyof CreateFormData, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(form);
+    onSubmit(form);
   };
 
   const inputCls =
@@ -244,23 +231,12 @@ function CreateSequenceForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Sequence Name *</label>
-            <input
-              className={inputCls}
-              placeholder="e.g. VIP Anniversary Offer"
-              value={form.name}
-              onChange={(e) => set('name', e.target.value)}
-              required
-            />
+            <input className={inputCls} placeholder="e.g. VIP Anniversary Offer" value={form.name} onChange={(e) => set('name', e.target.value)} required />
           </div>
-
           <div>
             <label className={labelCls}>Channel *</label>
             <div className="relative">
-              <select
-                className={cn(inputCls, 'appearance-none pr-8')}
-                value={form.channel}
-                onChange={(e) => set('channel', e.target.value as CreateFormData['channel'])}
-              >
+              <select className={cn(inputCls, 'appearance-none pr-8')} value={form.channel} onChange={(e) => set('channel', e.target.value as CreateFormData['channel'])}>
                 <option value="sms">SMS</option>
                 <option value="email">Email</option>
                 <option value="both">SMS + Email</option>
@@ -268,15 +244,10 @@ function CreateSequenceForm({
               <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
             </div>
           </div>
-
           <div>
             <label className={labelCls}>Trigger Event</label>
             <div className="relative">
-              <select
-                className={cn(inputCls, 'appearance-none pr-8')}
-                value={form.trigger_event}
-                onChange={(e) => set('trigger_event', e.target.value)}
-              >
+              <select className={cn(inputCls, 'appearance-none pr-8')} value={form.trigger_event} onChange={(e) => set('trigger_event', e.target.value)}>
                 <option value="manual">Manual</option>
                 <option value="first_visit">First Visit</option>
                 <option value="birthday">Birthday</option>
@@ -286,93 +257,93 @@ function CreateSequenceForm({
               <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
             </div>
           </div>
-
           <div>
             <label className={labelCls}>Delay (days)</label>
-            <input
-              type="number"
-              min="0"
-              max="365"
-              className={inputCls}
-              placeholder="0"
-              value={form.delay_days}
-              onChange={(e) => set('delay_days', e.target.value)}
-            />
+            <input type="number" min="0" max="365" className={inputCls} placeholder="0" value={form.delay_days} onChange={(e) => set('delay_days', e.target.value)} />
           </div>
         </div>
 
         {(form.channel === 'email' || form.channel === 'both') && (
           <div>
             <label className={labelCls}>Email Subject</label>
-            <input
-              className={inputCls}
-              placeholder="e.g. A special offer just for you, {{first_name}}!"
-              value={form.subject}
-              onChange={(e) => set('subject', e.target.value)}
-            />
+            <input className={inputCls} placeholder="e.g. A special offer just for you, {{first_name}}!" value={form.subject} onChange={(e) => set('subject', e.target.value)} />
           </div>
         )}
 
         <div>
           <label className={labelCls}>Message Template</label>
-          <textarea
-            className={cn(inputCls, 'resize-none')}
-            rows={3}
-            placeholder="Use {{first_name}}, {{restaurant_name}} as placeholders..."
-            value={form.message_template}
-            onChange={(e) => set('message_template', e.target.value)}
-          />
+          <textarea className={cn(inputCls, 'resize-none')} rows={3} placeholder="Use {{first_name}}, {{restaurant_name}} as placeholders..." value={form.message_template} onChange={(e) => set('message_template', e.target.value)} />
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-1">
-          <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={submitting}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" size="sm" disabled={submitting || !form.name}>
-            {submitting ? 'Creating...' : 'Create Sequence'}
-          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" variant="primary" size="sm" disabled={!form.name}>Create Sequence</Button>
         </div>
       </form>
     </div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+const initialSequences: SequenceDefinition[] = [
+  {
+    id: 'seq1',
+    restaurant_id: 'demo',
+    type: 'winback',
+    name: 'Win-Back After 30 Days',
+    enabled: true,
+    channel: 'email',
+    subject: 'We miss you, {{first_name}}',
+    message_template: 'Come back for 15% off!',
+    trigger_event: 'days_since_visit',
+    delay_days: 30,
+    created_at: new Date().toISOString(),
+    stats: { sent: 420, opened: 189, clicked: 68, converted: 24 },
+  },
+  {
+    id: 'seq2',
+    restaurant_id: 'demo',
+    type: 'welcome',
+    name: 'First Visit Welcome',
+    enabled: true,
+    channel: 'sms',
+    message_template: 'Thanks for dining with us, {{first_name}}!',
+    trigger_event: 'first_visit',
+    delay_days: 1,
+    created_at: new Date().toISOString(),
+    stats: { sent: 184, opened: 172, clicked: 58, converted: 19 },
+  },
+  {
+    id: 'seq3',
+    restaurant_id: 'demo',
+    type: 'birthday',
+    name: 'Birthday Free Dessert',
+    enabled: false,
+    channel: 'both',
+    subject: 'Happy Birthday!',
+    message_template: 'A free dessert on us, {{first_name}}!',
+    trigger_event: 'birthday',
+    delay_days: 0,
+    created_at: new Date().toISOString(),
+    stats: { sent: 48, opened: 40, clicked: 22, converted: 14 },
+  },
+];
 
 export default function SequencesPage() {
-  const [definitions, setDefinitions] = useState<SequenceDefinition[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items: definitions, add, update, remove } = useCrudList<SequenceDefinition>(
+    'seatsignals_sequences',
+    initialSequences
+  );
+
   const [showCreate, setShowCreate] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const fetchDefinitions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/sequences');
-      if (!res.ok) throw new Error('Failed to load sequences');
-      const data = await res.json();
-      setDefinitions(data.definitions ?? []);
-    } catch {
-      toast.error('Could not load sequences');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDefinitions();
-  }, [fetchDefinitions]);
-
-  // ── Aggregate metrics ──────────────────────────────────────────────────────
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [editingSequence, setEditingSequence] = useState<SequenceDefinition | undefined>(undefined);
 
   const metrics = (() => {
     const totalSent = definitions.reduce((sum, d) => sum + (d.stats?.sent ?? 0), 0);
     const totalOpened = definitions.reduce((sum, d) => sum + (d.stats?.opened ?? 0), 0);
     const totalClicked = definitions.reduce((sum, d) => sum + (d.stats?.clicked ?? 0), 0);
     const totalConverted = definitions.reduce((sum, d) => sum + (d.stats?.converted ?? 0), 0);
-
-    const safeDiv = (n: number, d: number) => (d === 0 ? 0 : Math.round((n / d) * 100));
-
+    const safeDiv = (n: number, dd: number) => (dd === 0 ? 0 : Math.round((n / dd) * 100));
     return {
       totalSent,
       openRate: safeDiv(totalOpened, totalSent),
@@ -381,149 +352,110 @@ export default function SequencesPage() {
     };
   })();
 
-  // ── Toggle handler ─────────────────────────────────────────────────────────
+  const handleToggle = (id: string, enabled: boolean) => {
+    update(id, { enabled });
+    toast.success(enabled ? 'Sequence enabled' : 'Sequence disabled');
+  };
 
-  const handleToggle = async (id: string, enabled: boolean) => {
-    // Optimistic update
-    setDefinitions((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, enabled } : d))
-    );
+  const handleDelete = (id: string) => {
+    if (!confirm('Delete this sequence?')) return;
+    remove(id);
+    toast.success('Sequence deleted');
+  };
 
-    const res = await fetch('/api/sequences', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, enabled }),
+  const handleQuickCreate = (formData: CreateFormData) => {
+    add({
+      id: `seq_${Date.now()}`,
+      restaurant_id: 'demo',
+      type: formData.trigger_event === 'manual' ? 'custom' : formData.trigger_event,
+      name: formData.name,
+      enabled: true,
+      channel: formData.channel,
+      subject: formData.subject || undefined,
+      message_template: formData.message_template || undefined,
+      trigger_event: formData.trigger_event,
+      delay_days: parseInt(formData.delay_days, 10) || 0,
+      created_at: new Date().toISOString(),
+      stats: { sent: 0, opened: 0, clicked: 0, converted: 0 },
     });
-
-    if (!res.ok) {
-      // Revert
-      setDefinitions((prev) =>
-        prev.map((d) => (d.id === id ? { ...d, enabled: !enabled } : d))
-      );
-      toast.error('Failed to update sequence');
-    } else {
-      toast.success(enabled ? 'Sequence enabled' : 'Sequence disabled');
-    }
+    setShowCreate(false);
+    toast.success('Sequence created!');
   };
 
-  // ── Create handler ─────────────────────────────────────────────────────────
+  const openBuilder = (def?: SequenceDefinition) => {
+    setEditingSequence(def);
+    setBuilderOpen(true);
+  };
 
-  const handleCreate = async (formData: {
+  const handleBuilderSave = (data: {
+    id?: string;
     name: string;
+    type: string;
+    enabled: boolean;
     channel: 'sms' | 'email' | 'both';
-    trigger_event: string;
-    delay_days: string;
-    subject: string;
-    message_template: string;
+    steps: unknown[];
   }) => {
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/sequences', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          channel: formData.channel,
-          trigger_event: formData.trigger_event,
-          delay_days: parseInt(formData.delay_days, 10) || 0,
-          subject: formData.subject || undefined,
-          message_template: formData.message_template || undefined,
-        }),
+    if (data.id) {
+      update(data.id, {
+        name: data.name,
+        type: data.type,
+        enabled: data.enabled,
+        channel: data.channel,
+        message_template: JSON.stringify(data.steps),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? 'Failed to create');
-      }
-
-      const { definition } = await res.json();
-      setDefinitions((prev) => [
-        ...prev,
-        { ...definition, stats: { sent: 0, opened: 0, clicked: 0, converted: 0 } },
-      ]);
-      setShowCreate(false);
+      toast.success('Sequence updated!');
+    } else {
+      add({
+        id: `seq_${Date.now()}`,
+        restaurant_id: 'demo',
+        type: data.type || 'custom',
+        name: data.name,
+        enabled: data.enabled,
+        channel: data.channel,
+        trigger_event: 'manual',
+        delay_days: 0,
+        message_template: JSON.stringify(data.steps),
+        created_at: new Date().toISOString(),
+        stats: { sent: 0, opened: 0, clicked: 0, converted: 0 },
+      });
       toast.success('Sequence created!');
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create sequence');
-    } finally {
-      setSubmitting(false);
     }
+    setBuilderOpen(false);
+    setEditingSequence(undefined);
   };
-
-  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-[#09090B] p-6 lg:p-8">
-      {/* Page header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Zap size={18} className="text-[#E11D48]" />
             <h1 className="text-xl font-bold text-white">Sequences & Campaigns</h1>
           </div>
-          <p className="text-sm text-zinc-500">
-            Automated messaging campaigns that drive repeat visits and revenue
-          </p>
+          <p className="text-sm text-zinc-500">Automated messaging campaigns that drive repeat visits and revenue</p>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowCreate((v) => !v)}
-          className="gap-1.5"
-        >
-          <Plus size={14} />
-          Create Custom
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setShowCreate((v) => !v)} className="gap-1.5">
+            <Plus size={14} />
+            Quick Create
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => openBuilder()} className="gap-1.5">
+            <Zap size={14} />
+            Create Sequence
+          </Button>
+        </div>
       </div>
 
-      {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard
-          title="Total Sent"
-          value={metrics.totalSent.toLocaleString()}
-          subtitle="All time across sequences"
-          icon={<Send size={14} />}
-        />
-        <MetricCard
-          title="Avg Open Rate"
-          value={`${metrics.openRate}%`}
-          subtitle="Messages opened"
-          icon={<Eye size={14} />}
-        />
-        <MetricCard
-          title="Avg Click Rate"
-          value={`${metrics.clickRate}%`}
-          subtitle="Links clicked"
-          icon={<MousePointer size={14} />}
-        />
-        <MetricCard
-          title="Avg Conversion"
-          value={`${metrics.convRate}%`}
-          subtitle="Customers converted"
-          icon={<TrendingUp size={14} />}
-        />
+        <MetricCard title="Total Sent" value={metrics.totalSent.toLocaleString()} subtitle="All time across sequences" icon={<Send size={14} />} />
+        <MetricCard title="Avg Open Rate" value={`${metrics.openRate}%`} subtitle="Messages opened" icon={<Eye size={14} />} />
+        <MetricCard title="Avg Click Rate" value={`${metrics.clickRate}%`} subtitle="Links clicked" icon={<MousePointer size={14} />} />
+        <MetricCard title="Avg Conversion" value={`${metrics.convRate}%`} subtitle="Customers converted" icon={<TrendingUp size={14} />} />
       </div>
 
-      {/* Create form (inline) */}
-      {showCreate && (
-        <CreateSequenceForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowCreate(false)}
-          submitting={submitting}
-        />
-      )}
+      {showCreate && <CreateSequenceForm onSubmit={handleQuickCreate} onCancel={() => setShowCreate(false)} />}
 
-      {/* Sequence grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 h-52 animate-pulse"
-            />
-          ))}
-        </div>
-      ) : definitions.length === 0 ? (
+      {definitions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Zap size={40} className="text-zinc-700 mb-4" />
           <p className="text-white font-medium mb-1">No sequences yet</p>
@@ -532,9 +464,20 @@ export default function SequencesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {definitions.map((def) => (
-            <SequenceCard key={def.id} definition={def} onToggle={handleToggle} />
+            <SequenceCard key={def.id} definition={def} onToggle={handleToggle} onEdit={openBuilder} onDelete={handleDelete} />
           ))}
         </div>
+      )}
+
+      {builderOpen && (
+        <SequenceBuilder
+          sequence={editingSequence}
+          onSave={handleBuilderSave}
+          onClose={() => {
+            setBuilderOpen(false);
+            setEditingSequence(undefined);
+          }}
+        />
       )}
     </div>
   );

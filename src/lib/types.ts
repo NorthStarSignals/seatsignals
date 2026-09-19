@@ -6,7 +6,7 @@ export interface Restaurant {
   lng: number;
   cuisine_type: string;
   brand_voice: string;
-  subscription_tier: 'starter' | 'growth' | 'pro';
+  subscription_tier: 'starter' | 'growth' | 'pro' | 'enterprise';
   setup_date: string;
   dead_hours_config: DeadHourWindow[];
   clerk_user_id: string;
@@ -155,6 +155,22 @@ export interface BirthdayEvent {
   redemption_code: string;
 }
 
+export interface Referral {
+  id: string;
+  restaurant_id: string;
+  referrer_id: string;
+  referred_email: string;
+  referred_customer_id?: string;
+  referral_code: string;
+  status: 'pending' | 'signed_up' | 'visited' | 'rewarded';
+  reward_type?: string;
+  reward_value?: string;
+  referrer_rewarded: boolean;
+  referred_rewarded: boolean;
+  created_at: string;
+  converted_at?: string;
+}
+
 export interface SequenceDefinition {
   id: string;
   restaurant_id: string;
@@ -174,6 +190,68 @@ export interface SequenceDefinition {
     clicked: number;
     converted: number;
   };
+}
+
+export interface SurveyResponse {
+  id: string;
+  restaurant_id: string;
+  customer_id: string | null;
+  survey_type: string;
+  overall_rating: number;
+  food_rating: number | null;
+  service_rating: number | null;
+  ambiance_rating: number | null;
+  would_recommend: boolean | null;
+  feedback_text: string | null;
+  visit_id: string | null;
+  created_at: string;
+}
+
+export interface MessageTemplate {
+  id: string;
+  restaurant_id: string | null;
+  name: string;
+  category: string;
+  channel: string;
+  subject: string | null;
+  body: string;
+  variables: string[];
+  is_system: boolean;
+  usage_count: number;
+  created_at: string;
+}
+
+export interface FlashDeal {
+  id: string;
+  restaurant_id: string;
+  title: string;
+  description?: string;
+  deal_type: 'flash' | 'happy_hour' | 'early_bird' | 'late_night';
+  discount_value: string;
+  starts_at: string;
+  expires_at: string;
+  max_redemptions?: number;
+  current_redemptions: number;
+  redemption_code: string;
+  target_audience: string;
+  channel: string;
+  message_sent: boolean;
+  active: boolean;
+  created_at: string;
+}
+
+export interface TeamMember {
+  id: string;
+  restaurant_id: string;
+  clerk_user_id: string | null;
+  email: string;
+  name: string | null;
+  role: 'owner' | 'admin' | 'manager' | 'staff' | 'viewer';
+  permissions: Record<string, unknown>;
+  invited_at: string;
+  accepted_at: string | null;
+  active: boolean;
+  created_at: string;
 }
 
 export interface RestaurantEmailConfig {

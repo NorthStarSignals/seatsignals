@@ -1,13 +1,193 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { MetricCard } from '@/components/ui/metric-card';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 import { Customer } from '@/lib/types';
-import { Search, Download, Plus } from 'lucide-react';
+import { CustomerMergeModal } from '@/components/dashboard/customer-merge-modal';
+import { Search, Download, Plus, GitMerge, X, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+interface DuplicateSet {
+  match_type: string;
+  customers: Record<string, unknown>[];
+}
+
+interface CustomerTag {
+  tag: string;
+  count: number;
+}
+
+const TAG_COLORS = [
+  'bg-red-500/20 text-red-300 border-red-500/30',
+  'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  'bg-pink-500/20 text-pink-300 border-pink-500/30',
+  'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+  'bg-orange-500/20 text-orange-300 border-orange-500/30',
+];
+
+function getTagColor(tag: string) {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+}
+
+function TagEditorPopover({
+  customerId,
+  currentTags,
+  allTags,
+  onUpdate,
+  onClose,
+}: {
+  customerId: string;
+  currentTags: string[];
+  allTags: CustomerTag[];
+  onUpdate: () => void;
+  onClose: () => void;
+}) {
+  const [newTag, setNewTag] = useState('');
+  const [saving, setSaving] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [onClose]);
+
+  const addTag = async (tag: string) => {
+    if (!tag.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/customers/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_id: customerId, tags: [tag.trim()] }),
+      });
+      if (!res.ok) throw new Error('Failed to add tag');
+      setNewTag('');
+      onUpdate();
+    } catch {
+      toast.error('Failed to add tag');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeTag = async (tag: string) => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/customers/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_id: customerId, remove_tags: [tag] }),
+      });
+      if (!res.ok) throw new Error('Failed to remove tag');
+      onUpdate();
+    } catch {
+      toast.error('Failed to remove tag');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const suggestedTags = allTags
+    .map((t) => t.tag)
+    .filter((t) => !currentTags.includes(t));
+
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 top-full mt-1 z-40 bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl w-64"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-zinc-400 font-medium">Tags</span>
+        <button onClick={onClose} className="text-zinc-500 hover:text-white">
+          <X size={14} />
+        </button>
+      </div>
+
+      {/* Current tags */}
+      <div className="flex flex-wrap gap-1 mb-2">
+        {currentTags.map((tag) => (
+          <span
+            key={tag}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${getTagColor(tag)}`}
+          >
+            {tag}
+            <button
+              onClick={() => removeTag(tag)}
+              disabled={saving}
+              className="hover:text-white ml-0.5"
+            >
+              <X size={10} />
+            </button>
+          </span>
+        ))}
+        {currentTags.length === 0 && (
+          <span className="text-xs text-zinc-500">No tags yet</span>
+        )}
+      </div>
+
+      {/* Add new tag */}
+      <div className="flex gap-1 mb-2">
+        <input
+          type="text"
+          value={newTag}
+          onChange={(e) => setNewTag(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              addTag(newTag);
+            }
+          }}
+          placeholder="New tag..."
+          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-xs px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-500"
+          disabled={saving}
+        />
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => addTag(newTag)}
+          disabled={saving || !newTag.trim()}
+          className="text-xs h-7 px-2"
+        >
+          Add
+        </Button>
+      </div>
+
+      {/* Suggested tags */}
+      {suggestedTags.length > 0 && (
+        <div>
+          <span className="text-xs text-zinc-500 block mb-1">Suggestions</span>
+          <div className="flex flex-wrap gap-1">
+            {suggestedTags.slice(0, 8).map((tag) => (
+              <button
+                key={tag}
+                onClick={() => addTag(tag)}
+                disabled={saving}
+                className={`px-2 py-0.5 rounded-full text-xs border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors`}
+              >
+                + {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -19,6 +199,17 @@ export default function CustomersPage() {
   const [form, setForm] = useState({ first_name: '', email: '', phone: '' });
   const [wifiConnected, setWifiConnected] = useState(false);
   const [connectedCrm, setConnectedCrm] = useState<string | null>(null);
+
+  // Duplicate detection state
+  const [duplicateSets, setDuplicateSets] = useState<DuplicateSet[]>([]);
+  const [showDuplicates, setShowDuplicates] = useState(false);
+  const [loadingDuplicates, setLoadingDuplicates] = useState(false);
+  const [mergeModalSet, setMergeModalSet] = useState<DuplicateSet | null>(null);
+
+  // Tag state
+  const [customerTags, setCustomerTags] = useState<Record<string, string[]>>({});
+  const [allTags, setAllTags] = useState<CustomerTag[]>([]);
+  const [tagEditorId, setTagEditorId] = useState<string | null>(null);
 
   const fetchCustomers = async (searchTerm?: string) => {
     setLoading(true);
@@ -32,9 +223,49 @@ export default function CustomersPage() {
     setLoading(false);
   };
 
+  const fetchTags = async () => {
+    try {
+      const res = await fetch('/api/customers/tags');
+      if (res.ok) {
+        const data = await res.json();
+        setAllTags(data.tags || []);
+      }
+    } catch {
+      // Tags are non-critical
+    }
+  };
+
   useEffect(() => {
     fetchCustomers();
+    fetchTags();
   }, []);
+
+  // Fetch customer tags when customers load
+  useEffect(() => {
+    if (customers.length > 0) {
+      fetchCustomerTagsInline(customers.map((c) => c.customer_id));
+    }
+  }, [customers]);
+
+  const fetchCustomerTagsInline = async (customerIds: string[]) => {
+    try {
+      // Fetch all tags for visible customers. Since we don't have a bulk endpoint,
+      // we'll use a workaround: the page will make a single call.
+      // For MVP, we'll just fetch all restaurant tags and match.
+      // We need a slightly different API call. Let's use the existing tags data
+      // and map from the full list. Actually the simplest: add a bulk endpoint.
+      // For now, use a fetch to a custom query param.
+      const res = await fetch(`/api/customers/tags?customer_ids=${customerIds.join(',')}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.customer_tags) {
+          setCustomerTags(data.customer_tags);
+        }
+      }
+    } catch {
+      // Non-critical
+    }
+  };
 
   // Fetch integration status for WiFi and CRM
   useEffect(() => {
@@ -129,13 +360,58 @@ export default function CustomersPage() {
     URL.revokeObjectURL(url);
   };
 
+  const findDuplicates = async () => {
+    setLoadingDuplicates(true);
+    try {
+      const res = await fetch('/api/customers/duplicates');
+      if (!res.ok) throw new Error('Failed to find duplicates');
+      const data = await res.json();
+      setDuplicateSets(data.duplicate_sets || []);
+      setShowDuplicates(true);
+      if (data.duplicate_sets?.length === 0) {
+        toast.success('No duplicates found');
+      } else {
+        toast.success(`Found ${data.duplicate_sets.length} potential duplicate set(s)`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to find duplicates');
+    } finally {
+      setLoadingDuplicates(false);
+    }
+  };
+
+  const handleMergeComplete = () => {
+    setMergeModalSet(null);
+    // Refresh duplicates and customers
+    findDuplicates();
+    fetchCustomers(search);
+    fetchTags();
+  };
+
+  const handleTagUpdate = () => {
+    fetchTags();
+    if (customers.length > 0) {
+      fetchCustomerTagsInline(customers.map((c) => c.customer_id));
+    }
+  };
+
   const inputClass = 'bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm px-4 py-2.5';
+
+  const MATCH_LABELS: Record<string, string> = {
+    email: 'Same Email',
+    phone: 'Same Phone',
+    name: 'Same Name',
+  };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Customers</h1>
         <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={findDuplicates} disabled={loadingDuplicates}>
+            <GitMerge size={16} className="mr-2" />
+            {loadingDuplicates ? 'Scanning...' : 'Find Duplicates'}
+          </Button>
           <Button variant="primary" size="sm" onClick={() => { setShowAdd(true); setEditingId(null); setForm({ first_name: '', email: '', phone: '' }); }}>
             <Plus size={16} className="mr-2" /> Add Customer
           </Button>
@@ -144,6 +420,48 @@ export default function CustomersPage() {
           </Button>
         </div>
       </div>
+
+      {/* Duplicate Sets Panel */}
+      {showDuplicates && duplicateSets.length > 0 && (
+        <div className="bg-zinc-900 border border-amber-500/30 rounded-2xl p-5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-medium flex items-center gap-2">
+              <GitMerge size={16} className="text-amber-400" />
+              Potential Duplicates ({duplicateSets.length} sets)
+            </h3>
+            <button onClick={() => setShowDuplicates(false)} className="text-zinc-400 hover:text-white">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="space-y-3">
+            {duplicateSets.map((set, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700 rounded-xl p-3"
+              >
+                <div className="flex-1">
+                  <span className="text-xs text-amber-400 font-medium mr-3">
+                    {MATCH_LABELS[set.match_type] || set.match_type}
+                  </span>
+                  <span className="text-sm text-zinc-300">
+                    {set.customers.map((c) => (c as Record<string, unknown>).first_name || (c as Record<string, unknown>).email || 'Unknown').join(', ')}
+                  </span>
+                  <span className="text-xs text-zinc-500 ml-2">
+                    ({set.customers.length} records)
+                  </span>
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setMergeModalSet(set)}
+                >
+                  Review & Merge
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {showAdd && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
@@ -211,6 +529,7 @@ export default function CustomersPage() {
                   <th className="text-left p-4 text-zinc-400 font-medium">Name</th>
                   <th className="text-left p-4 text-zinc-400 font-medium">Email</th>
                   <th className="text-left p-4 text-zinc-400 font-medium">Phone</th>
+                  <th className="text-left p-4 text-zinc-400 font-medium">Tags</th>
                   <th className="text-left p-4 text-zinc-400 font-medium">First Visit</th>
                   <th className="text-left p-4 text-zinc-400 font-medium">Last Visit</th>
                   <th className="text-left p-4 text-zinc-400 font-medium">Visits</th>
@@ -227,6 +546,7 @@ export default function CustomersPage() {
                         <td className="p-4"><input className={inputClass + ' w-full'} value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} /></td>
                         <td className="p-4"><input className={inputClass + ' w-full'} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></td>
                         <td className="p-4"><input className={inputClass + ' w-full'} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></td>
+                        <td className="p-4 text-zinc-400">--</td>
                         <td className="p-4 text-zinc-400">{formatDate(c.first_seen)}</td>
                         <td className="p-4 text-zinc-400">{formatDate(c.last_seen)}</td>
                         <td className="p-4 text-white">{c.visit_count}</td>
@@ -251,6 +571,34 @@ export default function CustomersPage() {
                         </td>
                         <td className="p-4 text-zinc-300">{c.email}</td>
                         <td className="p-4 text-zinc-300">{c.phone || '--'}</td>
+                        <td className="p-4">
+                          <div className="relative flex items-center gap-1 flex-wrap">
+                            {(customerTags[c.customer_id] || []).map((tag) => (
+                              <span
+                                key={tag}
+                                className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] border ${getTagColor(tag)}`}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            <button
+                              onClick={() => setTagEditorId(tagEditorId === c.customer_id ? null : c.customer_id)}
+                              className="text-zinc-500 hover:text-red-400 transition-colors p-0.5"
+                              title="Manage tags"
+                            >
+                              <Tag size={12} />
+                            </button>
+                            {tagEditorId === c.customer_id && (
+                              <TagEditorPopover
+                                customerId={c.customer_id}
+                                currentTags={customerTags[c.customer_id] || []}
+                                allTags={allTags}
+                                onUpdate={handleTagUpdate}
+                                onClose={() => setTagEditorId(null)}
+                              />
+                            )}
+                          </div>
+                        </td>
                         <td className="p-4 text-zinc-400">{formatDate(c.first_seen)}</td>
                         <td className="p-4 text-zinc-400">{formatDate(c.last_seen)}</td>
                         <td className="p-4 text-white">{c.visit_count}</td>
@@ -276,6 +624,15 @@ export default function CustomersPage() {
           </div>
         )}
       </div>
+
+      {/* Merge Modal */}
+      {mergeModalSet && (
+        <CustomerMergeModal
+          duplicateSet={mergeModalSet}
+          onMerge={handleMergeComplete}
+          onClose={() => setMergeModalSet(null)}
+        />
+      )}
     </div>
   );
 }
