@@ -32,8 +32,21 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Gunner onboarding docs — contain the demo account password, share privately only
+HANDOVER_GUNNER.md
+HANDOVER_GUNNER.docx
+QUICKSTART_GUNNER.md
+QUICKSTART_GUNNER.docx
+PRODUCT_TOUR_GUNNER.md
+PRODUCT_TOUR_GUNNER.docx
+DEMO_SCRIPT.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python cache (scripts/)
+__pycache__/
+*.pyc
 
 .vercel
