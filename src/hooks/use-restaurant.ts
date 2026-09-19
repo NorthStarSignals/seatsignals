@@ -3,31 +3,64 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Restaurant } from '@/lib/types';
 
+const ACTIVE_RESTAURANT_KEY = 'seatsignals_active_restaurant_id';
+
 export function useRestaurant() {
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchRestaurant = useCallback(() => {
-    fetch('/api/restaurant')
-      .then((res) => {
-        if (!res.ok) {
-          console.error(`[useRestaurant] Failed to fetch restaurant: ${res.status} ${res.statusText}`);
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        setRestaurant(data);
+  const fetchRestaurants = useCallback(async () => {
+    try {
+      const res = await fetch('/api/restaurants');
+      if (!res.ok) {
+        console.error(`[useRestaurant] Failed to fetch restaurants: ${res.status}`);
+        setRestaurants([]);
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error('[useRestaurant] Error fetching restaurant:', err);
-        setRestaurant(null);
-        setLoading(false);
-      });
+        return;
+      }
+      const data: Restaurant[] = await res.json();
+      setRestaurants(data);
+
+      // Restore saved active restaurant, validate it's still owned
+      const savedId = localStorage.getItem(ACTIVE_RESTAURANT_KEY);
+      const match = data.find((r) => r.restaurant_id === savedId);
+      if (match) {
+        setActiveId(match.restaurant_id);
+      } else if (data.length > 0) {
+        setActiveId(data[0].restaurant_id);
+        localStorage.setItem(ACTIVE_RESTAURANT_KEY, data[0].restaurant_id);
+      }
+    } catch (err) {
+      console.error('[useRestaurant] Error fetching restaurants:', err);
+      setRestaurants([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetchRestaurant(); }, [fetchRestaurant]);
+  useEffect(() => {
+    fetchRestaurants();
+  }, [fetchRestaurants]);
 
-  return { restaurant, loading, mutate: fetchRestaurant };
+  const setActiveRestaurant = useCallback(
+    (id: string) => {
+      const match = restaurants.find((r) => r.restaurant_id === id);
+      if (match) {
+        setActiveId(id);
+        localStorage.setItem(ACTIVE_RESTAURANT_KEY, id);
+      }
+    },
+    [restaurants]
+  );
+
+  const restaurant = restaurants.find((r) => r.restaurant_id === activeId) ?? null;
+
+  return {
+    restaurant,
+    restaurants,
+    setActiveRestaurant,
+    loading,
+    mutate: fetchRestaurants,
+  };
 }
