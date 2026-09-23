@@ -110,12 +110,12 @@ export default function Home() {
               Start free — no credit card
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <a
-              href="mailto:hello@seatsignals.app?subject=Demo%20request"
+            <Link
+              href="/demo"
               className="px-8 py-4 bg-seat-card border border-zinc-800 hover:border-zinc-600 text-white rounded-xl font-semibold transition"
             >
-              Book a 15-min demo
-            </a>
+              See it on your restaurant
+            </Link>
           </div>
 
           {/* Stats */}
