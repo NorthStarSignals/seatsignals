@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/terms',
   '/privacy',
   '/changelog',
+  '/demo',
 
   // Auth flows
   '/sign-in(.*)',
