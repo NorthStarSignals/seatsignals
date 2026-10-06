@@ -66,9 +66,12 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl font-semibold text-white mb-3">Cookies</h2>
           <p>
-            We use essential cookies to keep you signed in, remember preferences, and measure aggregate
-            usage. We don&apos;t use third-party advertising cookies. A cookie banner on first visit lets
-            you review what&apos;s set.
+            We use essential cookies to keep you signed in and remember preferences. On our public
+            pages, and only if you choose &quot;Accept all&quot; in the cookie banner, we also use Google
+            Analytics 4 and Microsoft Clarity to understand aggregate usage; Clarity may record
+            anonymized session interactions with on-screen content masked. We do not use third-party
+            advertising cookies, and we do not run these analytics inside your authenticated dashboard.
+            Choose &quot;Essential only&quot; in the banner to opt out.
           </p>
         </section>
 
