@@ -6,10 +6,11 @@ import Link from 'next/link';
 const STORAGE_KEY = 'seat_cookie_consent_v1';
 
 /**
- * Minimal cookie banner. Shows once, dismisses on Accept or Reject, remembers
- * the choice in localStorage. We don't actually load third-party trackers, so
- * "Reject" mostly signals respect for the user — the functional difference
- * is honoring localStorage as the user's preference going forward.
+ * Minimal cookie banner. Shows once, dismisses on Accept all or Essential only,
+ * and remembers the choice in localStorage. On "Accept all" the Analytics
+ * component loads Google Analytics and Microsoft Clarity on public pages; on
+ * "Essential only" nothing third-party loads. record() dispatches a
+ * seat-consent-changed event so Analytics reacts without a reload.
  */
 export function CookieBanner() {
   const [show, setShow] = useState(false);
@@ -26,6 +27,9 @@ export function CookieBanner() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ choice, at: new Date().toISOString() }));
     } catch {}
+    try {
+      window.dispatchEvent(new Event('seat-consent-changed'));
+    } catch {}
     setShow(false);
   };
 
@@ -34,8 +38,8 @@ export function CookieBanner() {
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-4">
       <p className="text-xs text-zinc-300 leading-relaxed">
-        We use essential cookies to keep you signed in and measure aggregate usage. No third-party ad
-        trackers. See our{' '}
+        We use essential cookies to keep you signed in. Accept all also loads Google Analytics and
+        Microsoft Clarity on our public pages to measure usage. Essential only keeps those off. See our{' '}
         <Link href="/privacy" className="text-seat-red hover:underline">Privacy Policy</Link>.
       </p>
       <div className="flex gap-2 mt-3">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { ClerkProvider } from "@clerk/nextjs";
 import { CookieBanner } from "@/components/cookie-banner";
+import { Analytics } from "@/components/analytics";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -33,6 +34,7 @@ export default function RootLayout({
         >
           {children}
           <CookieBanner />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
